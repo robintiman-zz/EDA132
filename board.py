@@ -1,5 +1,8 @@
-import numpy as np
+#!/usr/bin/env python
 
+import numpy as np
+from time import sleep
+import os
 
 class Board:
     def __init__(self):
@@ -12,8 +15,8 @@ class Board:
         a dark theme and vice versa.
         """
         global BLACK, WHITE, VERTICAL, HORIZONTAL, DIAG_EAST, DIAG_WEST
-        BLACK = 1
         WHITE = 0
+        BLACK = 1
         VERTICAL = 2
         HORIZONTAL = 3
         DIAG_EAST = 4
@@ -21,10 +24,10 @@ class Board:
 
         self.board = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
                                [-1, -1, -1, -1, -1, -1, -1, -1],
-                               [-1, -1,  1, -1, -1, -1, -1, -1],
+                               [-1, -1, -1, -1, -1, -1, -1, -1],
+                               [-1, -1, -1,  1,  0, -1, -1, -1],
                                [-1, -1, -1,  0,  1, -1, -1, -1],
-                               [-1, -1, -1,  0,  0, -1, -1, -1],
-                               [-1, -1,  0, -1, -1, -1, -1, -1],
+                               [-1, -1, -1, -1, -1, -1, -1, -1],
                                [-1, -1, -1, -1, -1, -1, -1, -1],
                                [-1, -1, -1, -1, -1, -1, -1, -1]])
 
@@ -36,40 +39,39 @@ class Board:
         col = self.board[:, y]
 
         # Check diagonally in both directions
-        offset1 = y - x # EAST
-        offset2 = y - 7 + x # WEST
-        diag1 = np.diagonal(self.board, offset1)
-        diag2 = np.diagonal(np.fliplr(self.board), offset2)
+        offset_east = y - x # EAST
+        offset_west = y - 7 + x # WEST
+        diag1 = np.diagonal(self.board, offset_east)
+        diag2 = np.diagonal(np.fliplr(self.board), offset_west, axis1=1, axis2=0)
 
         """
         Move is legal if the tiles are of the opposite color until the
         first tile of same color is reached
         """
         # Row and col first
-        line1, line2 = self.eval_line(row, y, color)
-        self.color_tile(line1, HORIZONTAL, color, y)
-        self.color_tile(line2, HORIZONTAL, color, y)
+        line1_row, line2_row = self.eval_line(row, y, color)
 
-        line1, line2 = self.eval_line(col, x, color)
-        self.color_tile(line1, VERTICAL, color, x)
-        self.color_tile(line2, VERTICAL, color, x)
+        line1_col, line2_col = self.eval_line(col, x, color)
 
         # Then diagonals
-        if offset1 > 0:
-            line1, line2 = self.eval_line(diag1, x, BLACK)
+        if offset_east > 0:
+            line1_east, line2_east = self.eval_line(diag1, x, BLACK)
         else:
-            line1, line2 = self.eval_line(diag1, y, BLACK)
+            line1_east, line2_east = self.eval_line(diag1, y, BLACK)
 
-        self.color_tile(line1, DIAG_EAST, BLACK, x=0, offset=offset1)
-        self.color_tile(line2, DIAG_EAST, BLACK, x=0, offset=offset1)
-
-        if offset2 > 0:
-            line1, line2 = self.eval_line(diag2, y, BLACK)
+        if offset_west > 0:
+            line1_west, line2_west = self.eval_line(diag2, x - offset_west, BLACK)
         else:
-            line1, line2 = self.eval_line(diag2, x, BLACK)
+            line1_west, line2_west = self.eval_line(diag2, 7 - y, BLACK)
 
-        self.color_tile(line1, DIAG_WEST, BLACK, x=0, offset=offset2)
-        self.color_tile(line2, DIAG_WEST, BLACK, x=0, offset=offset2)
+        self.color_tile(line1_row, HORIZONTAL, color, x)
+        self.color_tile(line2_row, HORIZONTAL, color, x)
+        self.color_tile(line1_col, VERTICAL, color, y)
+        self.color_tile(line2_col, VERTICAL, color, y)
+        self.color_tile(line1_east, DIAG_EAST, color, x=0, offset=offset_east)
+        self.color_tile(line2_east, DIAG_EAST, color, x=0, offset=offset_east)
+        self.color_tile(line1_west, DIAG_WEST, color, x=0, offset=offset_west)
+        self.color_tile(line2_west, DIAG_WEST, color, x=0, offset=offset_west)
 
 
     def eval_line(self, arr, x, color):
@@ -85,16 +87,17 @@ class Board:
         else:
             other_col = BLACK
 
+        # These may look complicated but running time is O(n) for both loops together
         # Check first half of the array up til x
         i = 0
         line1 = 0
         while i < x:
-            if arr[i] == color:
+            if arr[i] == other_col:
                 start = i
                 i += 1
-                while arr[i] == other_col:
+                while arr[i] == color:
                     i += 1
-                if arr[i] == -1:
+                if i == x:
                     line1 = (start, x)
             i += 1
 
@@ -102,8 +105,9 @@ class Board:
         i = x + 1
         line2 = 0
         while i < size:
-            if arr[i] == other_col:
-                i += 1
+            if arr[i] != other_col:
+                break
+            else:
                 while arr[i] == other_col:
                     i += 1
                 if arr[i] == color:
@@ -116,10 +120,10 @@ class Board:
         if line != 0:
 
             if dir == VERTICAL:
-                self.board[line[0]:line[1], x] = color
+                self.board[line[0]:line[1] + 1, x] = color
 
             elif dir == HORIZONTAL:
-                self.board[x, line[0]:line[1]] = color
+                self.board[x, line[0]:line[1] + 1] = color
 
             else:
                 if dir == DIAG_WEST:
@@ -150,7 +154,7 @@ class Board:
                 numb = self.board[x, y]
                 str_board += self.to_char(numb) + " "
             str_board += "\n"
-        print(str_board)
+        return str_board
 
     def to_char(self, numb):
         if numb == WHITE:
@@ -162,11 +166,32 @@ class Board:
 
 
 def main():
+    """
+    To run: type "python3 board.py" in your terminal.
+    It has to be a real terminal. os.system('clear') may not work in virtual ones.
+    """
     game = Board()
-    game.print_board()
-    game.place_tile(6, 1, BLACK)
-    game.print_board()
+    while True:
+        os.system('clear')
+        print("Hello and welcome to Martin and Robin's game of Reversi!\n"
+              "To play, enter the coordinates of your move separated by a space.\n"
+              "To quit, enter \"quit\".\n")
+        str_board = game.print_board()
+        print(str_board)
+        pos = input("Your move: ")
+        try:
+            x = int(pos[0])
+            y = int(pos[2])
+            game.place_tile(x, y, BLACK)
+        except ValueError:
+            if pos == "quit":
+                break
+            else:
+                print("\nInvalid input")
+                sleep(1)
 
+
+    print("\nGame Over!\n")
 
 if __name__ == '__main__':
     main()
