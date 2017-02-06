@@ -29,9 +29,6 @@ class Board:
                                [-1, -1, -1, -1, -1, -1, -1, -1]])
 
     def place_tile(self, x, y, color):
-        # Är nog enklare att bara göra detta i ett antal for-loopar.
-        # En loop för varje riktning
-
         # Check row
         row = self.board[x, :]
 
@@ -39,25 +36,41 @@ class Board:
         col = self.board[:, y]
 
         # Check diagonally in both directions
-        offset1 = y - x
-        offset2 = y - 7 + x
+        offset1 = y - x # EAST
+        offset2 = y - 7 + x # WEST
         diag1 = np.diagonal(self.board, offset1)
-        diag2 = np.diagonal(self.board, offset2, axis1=1, axis2=0)
-
-        # print(row, col, diag1, diag2)
+        diag2 = np.diagonal(np.fliplr(self.board), offset2)
 
         """
         Move is legal if the tiles are of the opposite color until the
         first tile of same color is reached
         """
+        # Row and col first
+        line1, line2 = self.eval_line(row, y, color)
+        self.color_tile(line1, HORIZONTAL, color, y)
+        self.color_tile(line2, HORIZONTAL, color, y)
+
+        line1, line2 = self.eval_line(col, x, color)
+        self.color_tile(line1, VERTICAL, color, x)
+        self.color_tile(line2, VERTICAL, color, x)
+
+        # Then diagonals
         if offset1 > 0:
             line1, line2 = self.eval_line(diag1, x, BLACK)
         else:
             line1, line2 = self.eval_line(diag1, y, BLACK)
-        # self.color_tile(y, line2, VERTICAL)
-        print(line1, line2)
+
         self.color_tile(line1, DIAG_EAST, BLACK, x=0, offset=offset1)
         self.color_tile(line2, DIAG_EAST, BLACK, x=0, offset=offset1)
+
+        if offset2 > 0:
+            line1, line2 = self.eval_line(diag2, y, BLACK)
+        else:
+            line1, line2 = self.eval_line(diag2, x, BLACK)
+
+        self.color_tile(line1, DIAG_WEST, BLACK, x=0, offset=offset2)
+        self.color_tile(line2, DIAG_WEST, BLACK, x=0, offset=offset2)
+
 
     def eval_line(self, arr, x, color):
         """
@@ -67,7 +80,6 @@ class Board:
         :return: True if the move is legal, False otherwise
         """
         size = arr.size
-        legal = True
         if color == BLACK:
             other_col = WHITE
         else:
@@ -79,6 +91,7 @@ class Board:
         while i < x:
             if arr[i] == color:
                 start = i
+                i += 1
                 while arr[i] == other_col:
                     i += 1
                 if arr[i] == -1:
@@ -90,6 +103,7 @@ class Board:
         line2 = 0
         while i < size:
             if arr[i] == other_col:
+                i += 1
                 while arr[i] == other_col:
                     i += 1
                 if arr[i] == color:
@@ -100,18 +114,32 @@ class Board:
 
     def color_tile(self, line, dir, color, x = 0, offset = 0):
         if line != 0:
+
             if dir == VERTICAL:
                 self.board[line[0]:line[1], x] = color
+
             elif dir == HORIZONTAL:
                 self.board[x, line[0]:line[1]] = color
-            elif dir == DIAG_EAST:
-                n = self.board[0]
-                diag = np.zeros([n - np.abs(offset)], dtype=np.int8)
-                diag[line[0]:line[1]] = color
-                diag_matrix = np.diag(diag, offset)
-                print(diag_matrix)
-                self.board[range(n - offset), range(n - offset)] = diag
-                self.print_board()
+
+            else:
+                if dir == DIAG_WEST:
+                    # The flip function is O(1) so it's cool performance wise
+                    tmp_board = np.fliplr(self.board)
+                else:
+                    tmp_board = self.board
+
+                if offset > 0:
+                    x_range = range(line[0], line[1] + 1)
+                    y_range = range(line[0] + offset, line[1] + offset + 1)
+                else:
+                    x_range = range(line[0] - offset, line[1] + 1)
+                    y_range = range(line[0], line[1] + 1)
+                tmp_board[x_range, y_range] = 1
+
+                if dir == DIAG_WEST:
+                    self.board = np.fliplr(tmp_board)
+                else:
+                    self.board = tmp_board
 
 
     def print_board(self):
@@ -136,7 +164,7 @@ class Board:
 def main():
     game = Board()
     game.print_board()
-    game.place_tile(5, 5, BLACK)
+    game.place_tile(6, 1, BLACK)
     game.print_board()
 
 
