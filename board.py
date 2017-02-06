@@ -32,6 +32,7 @@ class Board:
                                [-1, -1, -1, -1, -1, -1, -1, -1]])
 
     def place_tile(self, x, y, color):
+
         # Check row
         row = self.board[x, :]
 
@@ -63,6 +64,13 @@ class Board:
             line1_west, line2_west = self.eval_line(diag2, x - offset_west, BLACK)
         else:
             line1_west, line2_west = self.eval_line(diag2, 7 - y, BLACK)
+
+        legal = line1_col + line2_col + line1_row + line2_row + line1_east + line2_east \
+                + line1_west + line2_west == 0
+
+        if (not legal):
+            print("Illegal move\n")
+            return
 
         self.color_tile(line1_row, HORIZONTAL, color, x)
         self.color_tile(line2_row, HORIZONTAL, color, x)
