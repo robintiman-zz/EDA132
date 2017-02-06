@@ -42,8 +42,8 @@ class Board:
         # Check diagonally in both directions
         offset_east = y - x # EAST
         offset_west = y - 7 + x # WEST
-        diag1 = np.diagonal(self.board, offset_east)
-        diag2 = np.diagonal(np.fliplr(self.board), offset_west, axis1=1, axis2=0)
+        diag_east = np.diagonal(self.board, offset_east)
+        diag_west = np.diagonal(np.fliplr(self.board), offset_west, axis1=1, axis2=0)
 
         """
         Move is legal if the tiles are of the opposite color until the
@@ -56,21 +56,24 @@ class Board:
 
         # Then diagonals
         if offset_east > 0:
-            line1_east, line2_east = self.eval_line(diag1, x, BLACK)
+            line1_east, line2_east = self.eval_line(diag_east, x, BLACK)
         else:
-            line1_east, line2_east = self.eval_line(diag1, y, BLACK)
+            line1_east, line2_east = self.eval_line(diag_east, y, BLACK)
 
         if offset_west > 0:
-            line1_west, line2_west = self.eval_line(diag2, x - offset_west, BLACK)
+            line1_west, line2_west = self.eval_line(diag_west, x - offset_west, BLACK)
         else:
-            line1_west, line2_west = self.eval_line(diag2, 7 - y, BLACK)
+            line1_west, line2_west = self.eval_line(diag_west, 7 - y, BLACK)
 
-        legal = line1_col + line2_col + line1_row + line2_row + line1_east + line2_east \
-                + line1_west + line2_west == 0
-
-        if (not legal):
-            print("Illegal move\n")
-            return
+        # try:
+        #     legal = line1_col + line2_col + line1_row + line2_row + line1_east + line2_east \
+        #             + line1_west + line2_west == 0
+        #     if (not legal):
+        #         print("Illegal move\n")
+        #         sleep(1)
+        #         return
+        # except TypeError:
+        #     pass
 
         self.color_tile(line1_row, HORIZONTAL, color, x)
         self.color_tile(line2_row, HORIZONTAL, color, x)
@@ -103,10 +106,11 @@ class Board:
             if arr[i] == other_col:
                 start = i
                 i += 1
-                while arr[i] == color:
+                while arr[i] == other_col:
                     i += 1
                 if i == x:
                     line1 = (start, x)
+                    break
             i += 1
 
         # Other half after x
@@ -120,6 +124,7 @@ class Board:
                     i += 1
                 if arr[i] == color:
                     line2 = (x, i)
+                    break
             i += 1
 
         return line1, line2
@@ -190,13 +195,14 @@ def main():
         try:
             x = int(pos[0])
             y = int(pos[2])
-            game.place_tile(x, y, BLACK)
-        except ValueError:
+        except:
             if pos == "quit":
                 break
             else:
                 print("\nInvalid input")
                 sleep(1)
+
+        game.place_tile(x, y, BLACK)
 
 
     print("\nGame Over!\n")
