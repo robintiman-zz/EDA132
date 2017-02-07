@@ -3,7 +3,7 @@
 import numpy as np
 from time import sleep
 import os
-from .Minimax import Minimax
+import Minimax
 
 
 class Board:
@@ -25,47 +25,14 @@ class Board:
         DIAG_WEST = 5
         LEGAL = 6
 
-        self.board = np.array([[1, -1, -1, -1, -1, -1, -1, 1],
-                               [0, -1, -1, -1, -1, -1, 0, -1],
-                               [0, -1, -1, -1, -1, 0, -1, -1],
-                               [0, -1, -1,  1,  0, -1, -1, -1],
-                               [0, -1, -1,  -1,  1, -1, -1, -1],
-                               [0, -1, 0, -1, -1, -1, -1, -1],
-                               [0, 0, -1, -1, -1, -1, -1, -1],
-                               [1, 0, 0, 0, 1, -1, -1, -1]])
-
-
-
-    # def place_tile(self, x, y, color):
-    #
-    #     col, diag_east, diag_west, offset_east, offset_west, row = self.get_dir_arrays(x, y)
-    #
-    #     """
-    #     Move is legal if the tiles are of the opposite color until the
-    #     first tile of same color is reached
-    #     """
-    #
-    #
-    #     # try:
-    #     #     legal = line1_col + line2_col + line1_row + line2_row + line1_east + line2_east \
-    #     #             + line1_west + line2_west == 0
-    #     #     if (not legal):
-    #     #         print("Illegal move\n")
-    #     #         sleep(1)
-    #     #         return
-    #     # except TypeError:
-    #     #     pass
-    #
-    #     self.find_all_moves()
-    #
-    #     self.color_tile(line1_row, HORIZONTAL, color, x)
-    #     self.color_tile(line2_row, HORIZONTAL, color, x)
-    #     self.color_tile(line1_col, VERTICAL, color, y)
-    #     self.color_tile(line2_col, VERTICAL, color, y)
-    #     self.color_tile(line1_east, DIAG_EAST, color, x=0, offset=offset_east)
-    #     self.color_tile(line2_east, DIAG_EAST, color, x=0, offset=offset_east)
-    #     self.color_tile(line1_west, DIAG_WEST, color, x=0, offset=offset_west)
-    #     self.color_tile(line2_west, DIAG_WEST, color, x=0, offset=offset_west)
+        self.board = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
+                               [-1, -1, -1, -1, -1, -1, -1, -1],
+                               [-1, -1, -1, -1, -1, -1, -1, -1],
+                               [-1, -1, -1,  1,  0, -1, -1, -1],
+                               [-1, -1, -1,  0,  1, -1, -1, -1],
+                               [-1, -1, -1, -1, -1, -1, -1, -1],
+                               [-1, -1, -1, -1, -1, -1, -1, -1],
+                               [-1, -1, -1, -1, -1, -1, -1, -1]])
 
     def get_dir_arrays(self, x, y):
         # Check row
@@ -98,38 +65,36 @@ class Board:
         line1 = 0
         line2 = 0
 
-        if (arr[x] != -1):
-            return line1, line2
-
         legal = False
-        while i < x:
-            if i + 1 >= size:
-                break
-            if arr[i] == color:
-                start = i
+        if arr[x] == -1 or arr[x] == LEGAL:
+            while i < x:
+                if i + 1 >= size:
+                    break
+                if arr[i] == color:
+                    start = i
+                    i += 1
+                    while arr[i] == other_col:
+                        i += 1
+                        legal = True
+                    if i == x and legal:
+                        line1 = (start, x)
+                        break
                 i += 1
-                while arr[i] == other_col:
-                    i += 1
-                    legal = True
-                if i == x and legal:
-                    line1 = (start, x)
-                    break
-            i += 1
 
-        # Other half after x
-        i = x + 1
-        legal = False
-        while i < size:
-            if arr[i] != other_col or arr[size - 1] == other_col:
-                break
-            else:
-                while arr[i] == other_col:
-                    i += 1
-                    legal = True
-                if arr[i] == color and legal:
-                    line2 = (x, i)
+            # Other half after x
+            i = x + 1
+            legal = False
+            while i < size:
+                if arr[i] != other_col or arr[size - 1] == other_col:
                     break
-            i += 1
+                else:
+                    while arr[i] == other_col:
+                        i += 1
+                        legal = True
+                    if arr[i] == color and legal:
+                        line2 = (x, i)
+                        break
+                i += 1
 
         return line1, line2
 
@@ -155,7 +120,7 @@ class Board:
                 else:
                     x_range = range(line[0] - offset, line[1] + 1)
                     y_range = range(line[0], line[1] + 1)
-                tmp_board[x_range, y_range] = 1
+                tmp_board[x_range, y_range] = color
 
                 if dir == DIAG_WEST:
                     self.board = np.fliplr(tmp_board)
@@ -267,26 +232,32 @@ def main():
     It has to be a real terminal. os.system('clear') may not work in virtual ones.
     """
     game = Board()
-    minimax = Minimax()
+    player1s_turn = True
+    # minimax = Minimax(game)
     while True:
         os.system('clear')
         print("Hello and welcome to Martin and Robin's game of Reversi!\n"
               "To play, enter the coordinates of your move separated by a space.\n"
               "Possible moves are denoted with " + chr(9633) + ".\n"
               "To quit, enter \"quit\".\n")
-        all_moves, corner_move = game.find_all_moves(BLACK)
+        color = BLACK if player1s_turn else WHITE
+
+        all_moves, corner_move = game.find_all_moves(color)
         print(game.print_board())
 
         if (len(all_moves) == 0):
             pos = input("No moves available, press Enter to pass: ")
+            continue
         else:
             pos = input("Your move: ")
+        legal_move = False
         try:
             x = int(pos[0])
             y = int(pos[2])
             for i in range(0, len(all_moves)):
                 move = all_moves[i]
                 if move[0][0] == x and move[0][1] == y:
+                    legal_move = True
                     line = move[1]
                     dir = move[3]
                     offset = move[4]
@@ -294,25 +265,26 @@ def main():
                         pos_in_line = x
                     else:
                         pos_in_line = y
-                    game.color_tile(line, dir, BLACK, pos_in_line, offset)
+                    game.color_tile(line, dir, color, pos_in_line, offset)
+                    break
         except:
             if pos == "quit":
                 print("\nGame Over!\n")
                 break
-            elif int(pos) == 13:
-                print("You have passed")
-                sleep(1)
             else:
                 print("\nInvalid input")
                 sleep(1)
+                continue
 
-        result = Minimax(game)
-        if(result != "pass"):
-            game.place_title(result[0], result[1], WHITE)
-
-        if(pos == "pass" and result == "pass"):
-            print("\nNo more moves available for either player, Game over! Winner is" + game.winner())
-            break
+        if legal_move:
+            player1s_turn = not player1s_turn
+        # result = Minimax(game)
+        # if(result != "pass"):
+        #     game.place_title(result[0], result[1], WHITE)
+        #
+        # if(pos == "pass" and result == "pass"):
+        #     print("\nNo more moves available for either player, Game over! Winner is" + game.winner())
+        #     break
 
 if __name__ == '__main__':
     main()
