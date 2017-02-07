@@ -22,14 +22,14 @@ class Board:
         DIAG_EAST = 4
         DIAG_WEST = 5
 
-        self.board = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
-                               [-1, -1, -1, -1, -1, -1, -1, -1],
-                               [-1, -1, -1, -1, -1, -1, -1, -1],
-                               [-1, -1, -1,  1,  0, -1, -1, -1],
-                               [-1, -1, -1,  0,  1, -1, -1, -1],
-                               [-1, -1, -1, -1, -1, -1, -1, -1],
-                               [-1, -1, -1, -1, -1, -1, -1, -1],
-                               [-1, -1, -1, -1, -1, -1, -1, -1]])
+        self.board = np.array([[1, -1, -1, -1, -1, -1, -1, 1],
+                               [0, -1, -1, -1, -1, -1, 0, -1],
+                               [0, -1, -1, -1, -1, 0, -1, -1],
+                               [0, -1, -1,  1,  0, -1, -1, -1],
+                               [0, -1, -1,  -1,  1, -1, -1, -1],
+                               [0, -1, 0, -1, -1, -1, -1, -1],
+                               [0, 0, -1, -1, -1, -1, -1, -1],
+                               [1, 0, 0, 0, 1, -1, -1, -1]])
 
     def place_tile(self, x, y, color):
 
@@ -102,13 +102,15 @@ class Board:
         # Check first half of the array up til x
         i = 0
         line1 = 0
+        legal = False
         while i < x:
-            if arr[i] == other_col:
+            if arr[i] == color:
                 start = i
                 i += 1
                 while arr[i] == other_col:
                     i += 1
-                if i == x:
+                    legal = True
+                if i == x and legal:
                     line1 = (start, x)
                     break
             i += 1
@@ -116,13 +118,15 @@ class Board:
         # Other half after x
         i = x + 1
         line2 = 0
+        legal = False
         while i < size:
-            if arr[i] != other_col:
+            if arr[i] != other_col or i + 1 >= size:
                 break
             else:
                 while arr[i] == other_col:
                     i += 1
-                if arr[i] == color:
+                    legal = True
+                if arr[i] == color and legal:
                     line2 = (x, i)
                     break
             i += 1
