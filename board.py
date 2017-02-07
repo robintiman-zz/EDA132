@@ -34,36 +34,36 @@ class Board:
 
 
 
-    def place_tile(self, x, y, color):
-
-        col, diag_east, diag_west, offset_east, offset_west, row = self.get_dir_arrays(x, y)
-
-        """
-        Move is legal if the tiles are of the opposite color until the
-        first tile of same color is reached
-        """
-
-
-        # try:
-        #     legal = line1_col + line2_col + line1_row + line2_row + line1_east + line2_east \
-        #             + line1_west + line2_west == 0
-        #     if (not legal):
-        #         print("Illegal move\n")
-        #         sleep(1)
-        #         return
-        # except TypeError:
-        #     pass
-
-        self.find_all_moves()
-
-        self.color_tile(line1_row, HORIZONTAL, color, x)
-        self.color_tile(line2_row, HORIZONTAL, color, x)
-        self.color_tile(line1_col, VERTICAL, color, y)
-        self.color_tile(line2_col, VERTICAL, color, y)
-        self.color_tile(line1_east, DIAG_EAST, color, x=0, offset=offset_east)
-        self.color_tile(line2_east, DIAG_EAST, color, x=0, offset=offset_east)
-        self.color_tile(line1_west, DIAG_WEST, color, x=0, offset=offset_west)
-        self.color_tile(line2_west, DIAG_WEST, color, x=0, offset=offset_west)
+    # def place_tile(self, x, y, color):
+    #
+    #     col, diag_east, diag_west, offset_east, offset_west, row = self.get_dir_arrays(x, y)
+    #
+    #     """
+    #     Move is legal if the tiles are of the opposite color until the
+    #     first tile of same color is reached
+    #     """
+    #
+    #
+    #     # try:
+    #     #     legal = line1_col + line2_col + line1_row + line2_row + line1_east + line2_east \
+    #     #             + line1_west + line2_west == 0
+    #     #     if (not legal):
+    #     #         print("Illegal move\n")
+    #     #         sleep(1)
+    #     #         return
+    #     # except TypeError:
+    #     #     pass
+    #
+    #     self.find_all_moves()
+    #
+    #     self.color_tile(line1_row, HORIZONTAL, color, x)
+    #     self.color_tile(line2_row, HORIZONTAL, color, x)
+    #     self.color_tile(line1_col, VERTICAL, color, y)
+    #     self.color_tile(line2_col, VERTICAL, color, y)
+    #     self.color_tile(line1_east, DIAG_EAST, color, x=0, offset=offset_east)
+    #     self.color_tile(line2_east, DIAG_EAST, color, x=0, offset=offset_east)
+    #     self.color_tile(line1_west, DIAG_WEST, color, x=0, offset=offset_west)
+    #     self.color_tile(line2_west, DIAG_WEST, color, x=0, offset=offset_west)
 
     def get_dir_arrays(self, x, y):
         # Check row
@@ -131,7 +131,7 @@ class Board:
 
         return line1, line2
 
-    def color_tile(self, line, dir, color, x = 0, offset = 0):
+    def color_tile(self, line, dir, color, x = 0, offset = None):
         if line != 0:
 
             if dir == VERTICAL:
@@ -213,54 +213,32 @@ class Board:
                     lines.append((self.eval_line(diag_west, 7 - y, color), DIAG_WEST))
 
 
-                for line_tuple in np.nditer(lines):
-                    for line in np.nditer(line_tuple):
+                found_legal = False
+                for i in range(0, len(lines)):
+                    el = lines[i]
+                    line_tuple = el[0]
+                    dir = el[1]
+                    if dir == HORIZONTAL or dir == VERTICAL:
+                        offset = None
+                    elif dir == DIAG_EAST:
+                        offset = offset_east
+                    else:
+                        offset = offset_west
+
+                    for j in range(0, 2):
+                        line = line_tuple[j]
                         if line != 0:
+                            found_legal = True
                             score = line[1] - line[0]
                             self.board[x, y] = LEGAL
-
                             all_moves.append(((x, y), line, score, dir, offset))
 
-                # Yes this is ugly and should probably be fixed. Will be fixed if there's time
-                if line1_row != 0:
-                    score = line1_row[1] - line1_row[0]
-                    self.board[x, y] = LEGAL
-                    all_moves.append(((x, y), line1_row, score))
+                if not found_legal:
+                    tile = self.board[x, y]
+                    if tile == LEGAL:
+                        self.board[x, y] = -1
 
-                if line2_row != 0:
-                    score = line2_row[1] - line2_row[0]
-                    self.board[x, y] = LEGAL
-                    all_moves.append(((x, y), line2_row, score))
-
-                if line1_col != 0:
-                    score = line1_col[1] - line1_col[0]
-                    self.board[x, y] = LEGAL
-                    all_moves.append(((x, y), line1_col, score))
-
-                if line2_col != 0:
-                    score = line2_col[1] - line2_col[0]
-                    self.board[x, y] = LEGAL
-                    all_moves.append(((x, y), line2_col, score))
-
-                if line1_east != 0:
-                    score = line1_east[1] - line1_east[0]
-                    self.board[x, y] = LEGAL
-                    all_moves.append(((x, y), line1_east, score))
-
-                if line2_east != 0:
-                    score = line2_east[1] - line2_east[0]
-                    self.board[x, y] = LEGAL
-                    all_moves.append(((x, y), line2_east, score))
-
-                if line1_west != 0:
-                    score = line1_west[1] - line1_west[0]
-                    self.board[x, y] = LEGAL
-                    all_moves.append(((x, y), line1_west, score))
-
-                if line2_west != 0:
-                    score = line2_west[1] - line2_west[0]
-                    self.board[x, y] = LEGAL
-                    all_moves.append(((x, y), line2_west, score))
+                lines = []
 
                 # Corner move
                 if (x==0 or x==7) and (y==0 or y ==7):
@@ -289,15 +267,22 @@ def main():
               "Possible moves are denoted with " + chr(9633) + ".\n"
               "To quit, enter \"quit\".\n")
         all_moves, corner_move = game.find_all_moves(BLACK)
-        str_board = game.print_board()
-        print(str_board)
+        print(game.print_board())
         pos = input("Your move: ")
         try:
             x = int(pos[0])
             y = int(pos[2])
-            for move in np.nditer(all_moves):
+            for i in range(0, len(all_moves)):
+                move = all_moves[i]
                 if move[0][0] == x and move[0][1] == y:
-                    game.color_tile()
+                    line = move[1]
+                    dir = move[3]
+                    offset = move[4]
+                    if dir == HORIZONTAL:
+                        pos_in_line = x
+                    else:
+                        pos_in_line = y
+                    game.color_tile(line, dir, BLACK, pos_in_line, offset)
         except:
             if pos == "quit":
                 break
@@ -305,7 +290,7 @@ def main():
                 print("\nInvalid input")
                 sleep(1)
 
-        game.place_tile(x, y, BLACK)
+        # game.place_tile(x, y, BLACK)
 
 
     print("\nGame Over!\n")
