@@ -240,6 +240,7 @@ def main():
               "To play, enter the coordinates of your move separated by a space.\n"
               "Possible moves are denoted with " + chr(9633) + ".\n"
               "To quit, enter \"quit\".\n")
+
         color = BLACK if player1s_turn else WHITE
 
         all_moves, corner_move = game.find_all_moves(color)
