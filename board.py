@@ -3,6 +3,8 @@
 import numpy as np
 from time import sleep
 import os
+from .Minimax import Minimax
+
 
 class Board:
     def __init__(self):
@@ -252,6 +254,11 @@ class Board:
     def evaluate(self, board, startx, starty):
         pass
 
+    def terminal(self):
+        if (len(self.find_all_moves(BLACK)) == 0 and len(self.find_all_moves(WHITE)) ==0):
+            return True
+        else:
+            return False
 
 
 def main():
@@ -260,6 +267,7 @@ def main():
     It has to be a real terminal. os.system('clear') may not work in virtual ones.
     """
     game = Board()
+    minimax = Minimax()
     while True:
         os.system('clear')
         print("Hello and welcome to Martin and Robin's game of Reversi!\n"
@@ -268,7 +276,11 @@ def main():
               "To quit, enter \"quit\".\n")
         all_moves, corner_move = game.find_all_moves(BLACK)
         print(game.print_board())
-        pos = input("Your move: ")
+
+        if (len(all_moves) == 0):
+            pos = input("No moves available, press Enter to pass: ")
+        else:
+            pos = input("Your move: ")
         try:
             x = int(pos[0])
             y = int(pos[2])
@@ -285,15 +297,22 @@ def main():
                     game.color_tile(line, dir, BLACK, pos_in_line, offset)
         except:
             if pos == "quit":
+                print("\nGame Over!\n")
                 break
+            elif int(pos) == 13:
+                print("You have passed")
+                sleep(1)
             else:
                 print("\nInvalid input")
                 sleep(1)
 
-        # game.place_tile(x, y, BLACK)
+        result = Minimax(game)
+        if(result != "pass"):
+            game.place_title(result[0], result[1], WHITE)
 
-
-    print("\nGame Over!\n")
+        if(pos == "pass" and result == "pass"):
+            print("\nNo more moves available for either player, Game over! Winner is" + game.winner())
+            break
 
 if __name__ == '__main__':
     main()
