@@ -3,7 +3,8 @@
 import numpy as np
 from time import sleep
 import os
-import Minimax
+from .Minimax import Minimax
+
 
 class Board:
     def __init__(self):
@@ -275,6 +276,11 @@ class Board:
     def evaluate(self, board, startx, starty):
         pass
 
+    def terminal(self):
+        if (len(self.find_all_moves(BLACK)) == 0 and len(self.find_all_moves(WHITE)) ==0):
+            return True
+        else:
+            return False
 
 
 def main():
@@ -291,7 +297,7 @@ def main():
               "Possible moves are denoted with " + chr(9633) + ".\n"
               "To quit, enter \"quit\".\n")
         all_moves, corner_move = game.find_all_moves(BLACK)
-        str_board = game.print_board()
+        str_board = game.print_board(BLACK)
         print(str_board)
 
         if (len(game.find_all_moves()) == 0):
