@@ -3,6 +3,7 @@
 import numpy as np
 from time import sleep
 import os
+import Minimax
 
 class Board:
     def __init__(self):
@@ -193,8 +194,9 @@ class Board:
                 if(self.board.eval_line(self,board, x, y )):
                     all_moves.append(x, y)
                     if((x==0, y==0) or (x==7, y==0) or (x==7, y==0) or (x==7, y==7)):
-                        corner_move.append(x, y):
-        """Corner"""
+                        corner_move.append(x, y)
+
+        """Corners is always choosen first"""
         if (len(corner_move) >0):
             return corner_move
         return all_moves
@@ -203,6 +205,7 @@ class Board:
     """Evaluate the score of a particular placement of tile, each tile colored represent the score of one"""
 
     def evaluate(self, board, startx, starty):
+        board.
 
 
 
@@ -214,6 +217,7 @@ def main():
     It has to be a real terminal. os.system('clear') may not work in virtual ones.
     """
     game = Board()
+    minimax = Minimax()
     while True:
         os.system('clear')
         print("Hello and welcome to Martin and Robin's game of Reversi!\n"
@@ -221,7 +225,12 @@ def main():
               "To quit, enter \"quit\".\n")
         str_board = game.print_board()
         print(str_board)
-        pos = input("Your move: ")
+
+        if (len(game.find_all_moves()) == 0):
+            input("No more moves available, please press Enter to confirm: ")
+            pos = "pass"
+        else:
+            pos = input("Your move: ")
         try:
             x = int(pos[0])
             y = int(pos[2])
@@ -232,9 +241,17 @@ def main():
                 print("\nInvalid input")
                 sleep(1)
 
-        game.place_tile(x, y, BLACK)
+        if pos != "pass":
+            game.place_tile(x, y, BLACK)
 
 
+        result =minimax(game)
+        if(result != "pass"):
+            game.place_title(result[0], result[1], WHITE)
+
+        if(pos == "pass" and result == "pass"):
+            print("\nNo more moves available for either player, Game over! Winner is" + game.winner())
+            break
     print("\nGame Over!\n")
 
 if __name__ == '__main__':
