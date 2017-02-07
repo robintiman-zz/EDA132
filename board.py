@@ -182,6 +182,30 @@ class Board:
             return '·'
 
 
+    """Rewrite eval line or place tile so that there is a method is_legal
+    or something like that, byta ish mot detta https://inventwithpython.com/chapter15.html"""
+
+    def find_all_moves(self, board):
+        all_moves = []
+        corner_move = []
+        for x in range(self.board.shape[0]):
+            for y in range(self.board.shape[1]):
+                if(self.board.legal(self, x, y )):
+                    all_moves.append(x, y)
+                    if((x==0, y==0) or (x==7, y==0) or (x==7, y==0) or (x==7, y==7)):
+                        corner_move.append(x, y):
+
+        if (len(corner_move) >0):
+            return corner_move
+        return all_moves
+
+    def evaluate(self, board, startx, starty):
+
+
+
+
+
+
 def main():
     """
     To run: type "python3 board.py" in your terminal.
