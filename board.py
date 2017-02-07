@@ -190,17 +190,19 @@ class Board:
         corner_move = []
         for x in range(self.board.shape[0]):
             for y in range(self.board.shape[1]):
-                if(self.board.legal(self, x, y )):
+                if(self.board.eval_line(self,board, x, y )):
                     all_moves.append(x, y)
                     if((x==0, y==0) or (x==7, y==0) or (x==7, y==0) or (x==7, y==7)):
                         corner_move.append(x, y):
-
+        """Corner"""
         if (len(corner_move) >0):
             return corner_move
         return all_moves
 
-    def evaluate(self, board, startx, starty):
 
+    """Evaluate the score of a particular placement of tile, each tile colored represent the score of one"""
+
+    def evaluate(self, board, startx, starty):
 
 
 
