@@ -117,8 +117,11 @@ class Board:
                 if offset > 0:
                     x_range = range(line[0], line[1] + 1)
                     y_range = range(line[0] + offset, line[1] + offset + 1)
+                elif offset == 0:
+                    x_range = range(line[0], line[1] + 1)
+                    y_range = range(line[0], line[1] + 1)
                 else:
-                    x_range = range(line[0] - offset, line[1] + 1)
+                    x_range = range(line[0] - offset, line[1] - offset + 1)
                     y_range = range(line[0], line[1] + 1)
                 tmp_board[x_range, y_range] = color
 
@@ -270,9 +273,8 @@ def main():
                         pos_in_line = x
                     else:
                         pos_in_line = y
-                    game.color_tile(game, line, dir, color, pos_in_line, offset)
                     break
-        except:
+        except ValueError:
             if pos == "quit":
                 print("\nGame Over!\n")
                 break
@@ -282,6 +284,7 @@ def main():
                 continue
 
         if legal_move:
+            game.color_tile(line, dir, color, pos_in_line, offset)
             player1s_turn = not player1s_turn
         # result = Minimax(game)
         # if(result != "pass"):
