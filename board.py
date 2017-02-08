@@ -3,7 +3,7 @@
 import numpy as np
 from time import sleep
 import os
-import Minimax
+from Minimax import Minimax
 
 
 class Board:
@@ -34,16 +34,16 @@ class Board:
                                [-1, -1, -1, -1, -1, -1, -1, -1],
                                [-1, -1, -1, -1, -1, -1, -1, -1]])
 
-    def get_dir_arrays(self, x, y):
+    def get_dir_arrays(self, board, x, y):
         # Check row
-        row = self.board[x, :]
+        row = board[x, :]
         # Check column
-        col = self.board[:, y]
+        col = board[:, y]
         # Check diagonally in both directions
         offset_east = y - x  # EAST
         offset_west = 7 - y - x  # WEST
-        diag_east = np.diagonal(self.board, offset_east)
-        diag_west = np.diagonal(np.fliplr(self.board), offset_west, axis1=1, axis2=0)
+        diag_east = np.diagonal(board, offset_east)
+        diag_west = np.diagonal(np.fliplr(board), -offset_west, axis1=1, axis2=0)
         return (col, diag_east, diag_west, offset_east, offset_west, row)
 
     def eval_line(self, arr, x, color):
@@ -85,20 +85,21 @@ class Board:
             i = x + 1
             legal = False
             while i < size:
-                if arr[i] != other_col or arr[size - 1] == other_col:
+                if arr[i] != other_col:
                     break
                 else:
                     while arr[i] == other_col:
+                        if i == size - 1:
+                            return line1, line2
                         i += 1
-                        legal = True
-                    if arr[i] == color and legal:
+                    if arr[i] == color:
                         line2 = (x, i)
                         break
-                i += 1
+                break
 
         return line1, line2
 
-    def color_tile(self, board, line, dir, color, x = 0, offset = None):
+    def color_tile(self, board, line, dir, color, x = 0, offset = 0):
         if line != 0:
 
             if dir == VERTICAL:
@@ -130,7 +131,6 @@ class Board:
                 else:
                     board = tmp_board
 
-
     def print_board(self):
         str_board = "  0 1 2 3 4 5 6 7\n"
         for x in range(self.board.shape[0]):
@@ -151,6 +151,8 @@ class Board:
         else:
             return '·'
 
+    def get_board(self):
+        return self.board
 
     def find_all_moves(self, board, color):
         """
@@ -162,9 +164,9 @@ class Board:
         all_moves = []
         corner_move = []
         lines = []
-        for x in range(self.board.shape[0]):
-            for y in range(self.board.shape[1]):
-                col, diag_east, diag_west, offset_east, offset_west, row = self.get_dir_arrays(x, y)
+        for x in range(board.shape[0]):
+            for y in range(board.shape[1]):
+                col, diag_east, diag_west, offset_east, offset_west, row = self.get_dir_arrays(board, x, y)
 
                 # Row and col first
                 lines.append((self.eval_line(row, y, color), HORIZONTAL))
@@ -184,29 +186,27 @@ class Board:
 
 
                 found_legal = False
-                for i in range(0, len(lines)):
-                    el = lines[i]
+                for el in lines:
                     line_tuple = el[0]
                     dir = el[1]
                     if dir == HORIZONTAL or dir == VERTICAL:
-                        offset = None
+                        offset = 0
                     elif dir == DIAG_EAST:
                         offset = offset_east
                     else:
                         offset = offset_west
 
-                    for j in range(0, 2):
-                        line = line_tuple[j]
+                    for line in line_tuple:
                         if line != 0:
                             found_legal = True
                             score = line[1] - line[0]
-                            self.board[x, y] = LEGAL
+                            board[x, y] = LEGAL
                             all_moves.append(((x, y), line, score, dir, offset))
 
                 if not found_legal:
-                    tile = self.board[x, y]
+                    tile = board[x, y]
                     if tile == LEGAL:
-                        self.board[x, y] = -1
+                        board[x, y] = -1
 
                 lines = []
 
@@ -221,9 +221,9 @@ class Board:
     Mobility tells us the difference between the number of moves the player can perform and the number the
     bot can perform"""
 
-    def evaluate(self):
-        player = self.find_all_moves(self, BLACK)
-        bot = self.find_all_moves(self, WHITE)
+    def evaluate(self, board):
+        player = self.find_all_moves(board, BLACK)
+        bot = self.find_all_moves(board, WHITE)
         return len(bot) - len(player)
 
     def terminal(self):
@@ -240,59 +240,77 @@ def main():
     """
     game = Board()
     player1s_turn = True
-    # minimax = Minimax(game)
     while True:
         os.system('clear')
         print("Hello and welcome to Martin and Robin's game of Reversi!\n"
               "To play, enter the coordinates of your move separated by a space.\n"
               "Possible moves are denoted with " + chr(9633) + ".\n"
-              "To quit, enter \"quit\".\n")
+              "To quit, enter \"quit\".\n\n")
+
+        level = input("Please enter the level of depth you want the bot to search: ")
+        try:
+            level = int(level)
+        except ValueError:
+            print("Enter a number please")
+            continue
+
+        minimax = Minimax(game, level)
 
         color = BLACK if player1s_turn else WHITE
 
-        all_moves, corner_move = game.find_all_moves(color)
+        all_moves, corner_move = game.find_all_moves(game.board, color)
         print(game.print_board())
-
-        if (len(all_moves) == 0):
-            pos = input("No moves available, press Enter to pass: ")
-            continue
-        else:
-            pos = input("Your move: ")
-        legal_move = False
-        try:
-            x = int(pos[0])
-            y = int(pos[2])
-            for i in range(0, len(all_moves)):
-                move = all_moves[i]
-                if move[0][0] == x and move[0][1] == y:
-                    legal_move = True
-                    line = move[1]
-                    dir = move[3]
-                    offset = move[4]
-                    if dir == HORIZONTAL:
-                        pos_in_line = x
-                    else:
-                        pos_in_line = y
-                    break
-        except ValueError:
-            if pos == "quit":
-                print("\nGame Over!\n")
-                break
+        if player1s_turn:
+            if (len(all_moves) == 0):
+                pos = input("No moves available, press Enter to pass: ")
+                continue
             else:
-                print("\nInvalid input")
+                pos = input("Your move: ")
+            legal_move = False
+            try:
+                x = int(pos[0])
+                y = int(pos[2])
+                for i in range(0, len(all_moves)):
+                    move = all_moves[i]
+                    if move[0][0] == x and move[0][1] == y:
+                        legal_move = True
+                        line = move[1]
+                        dir = move[3]
+                        offset = move[4]
+                        if dir == HORIZONTAL:
+                            pos_in_line = x
+                        else:
+                            pos_in_line = y
+                        break
+            except ValueError:
+                if pos == "quit":
+                    print("\nGame Over!\n")
+                    break
+                else:
+                    print("\nInvalid input")
+                    sleep(1)
+                    continue
+
+            if legal_move:
+                game.color_tile(game.get_board(), line, dir, color, pos_in_line, offset)
+                player1s_turn = not player1s_turn
+
+        else:
+            comp_move = minimax.decision()
+            if comp_move == 0:
+                player1s_turn = not player1s_turn
+                print("Computer has passed\n")
                 sleep(1)
                 continue
-
-        if legal_move:
-            game.color_tile(line, dir, color, pos_in_line, offset)
+            line = comp_move[1]
+            dir = comp_move[3]
+            offset = comp_move[4]
+            if dir == HORIZONTAL:
+                pos_in_line = comp_move[0][0]
+            else:
+                pos_in_line = comp_move[0][1]
+            game.color_tile(game.get_board(), line, dir, color, pos_in_line, offset)
             player1s_turn = not player1s_turn
-        # result = Minimax(game)
-        # if(result != "pass"):
-        #     game.place_title(result[0], result[1], WHITE)
-        #
-        # if(pos == "pass" and result == "pass"):
-        #     print("\nNo more moves available for either player, Game over! Winner is" + game.winner())
-        #     break
 
 if __name__ == '__main__':
     main()
