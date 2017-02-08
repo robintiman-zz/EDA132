@@ -98,21 +98,21 @@ class Board:
 
         return line1, line2
 
-    def color_tile(self, line, dir, color, x = 0, offset = None):
+    def color_tile(self, board, line, dir, color, x = 0, offset = None):
         if line != 0:
 
             if dir == VERTICAL:
-                self.board[line[0]:line[1] + 1, x] = color
+                board[line[0]:line[1] + 1, x] = color
 
             elif dir == HORIZONTAL:
-                self.board[x, line[0]:line[1] + 1] = color
+                board[x, line[0]:line[1] + 1] = color
 
             else:
                 if dir == DIAG_WEST:
                     # The flip function is O(1) so it's cool performance wise
-                    tmp_board = np.fliplr(self.board)
+                    tmp_board = np.fliplr(board)
                 else:
-                    tmp_board = self.board
+                    tmp_board = board
 
                 if offset > 0:
                     x_range = range(line[0], line[1] + 1)
@@ -123,9 +123,9 @@ class Board:
                 tmp_board[x_range, y_range] = color
 
                 if dir == DIAG_WEST:
-                    self.board = np.fliplr(tmp_board)
+                    board = np.fliplr(tmp_board)
                 else:
-                    self.board = tmp_board
+                    board = tmp_board
 
 
     def print_board(self):
@@ -149,7 +149,7 @@ class Board:
             return '·'
 
 
-    def find_all_moves(self, color):
+    def find_all_moves(self, board, color):
         """
         Finds all legal moves.
         :param color: The color of the player
@@ -214,10 +214,14 @@ class Board:
         return all_moves, corner_move
 
 
-    """Evaluate the score of a particular placement of tile, each tile colored represent the score of one"""
+    """Evaluate the score of a particular placement of tile. The score is based on the metric of mobility
+    Mobility tells us the difference between the number of moves the player can perform and the number the
+    bot can perform"""
 
-    def evaluate(self, board, startx, starty):
-        pass
+    def evaluate(self):
+        player = self.find_all_moves(self, BLACK)
+        bot = self.find_all_moves(self, WHITE)
+        return len(bot) - len(player)
 
     def terminal(self):
         if (len(self.find_all_moves(BLACK)) == 0 and len(self.find_all_moves(WHITE)) ==0):
@@ -266,7 +270,7 @@ def main():
                         pos_in_line = x
                     else:
                         pos_in_line = y
-                    game.color_tile(line, dir, color, pos_in_line, offset)
+                    game.color_tile(game, line, dir, color, pos_in_line, offset)
                     break
         except:
             if pos == "quit":

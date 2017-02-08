@@ -18,7 +18,7 @@ def minimax_decision(game):
 
     all_inital_moves = game.find_all_moves(WHITE)
     result = []
-
+    game_eval = game;
     for a in all_inital_moves:
         result.append(max_value(game, a[0], a[1]))
 
@@ -28,25 +28,26 @@ def minimax_decision(game):
         return "pass"
 
 
-def max_value(game, x, y):
-
+def max_value(game,depth, x, y):
+    game_eval.color_tile(game_eval, )
     if game.terminal(x, y):
-        return game.score()
+        return game_eval.evaluate()
     v = float("-inf")
-
-    for b in game.find_all_moves(WHITE):
-        v = max(v, min_value(b[0], b[1]))
+    for b in range(0, len(game_eval.find_all_moves(WHITE))):
+        all_moves, corner_moves = game_eval.find_all_movesw(WHITE)
+        move = all_moves[b]
+        v = max(v, min_value(depth+1, move[0], move[1]))
 
     return v
 
 
-def min_value(game, x, y):
+def min_value(game, depth,x, y):
 
-    if game.terminal():
-        return game.score()
+    if game.terminal() or depth > 4:
+        return game_eval.evaluate()
     v = float("inf")
-    for c in game.find_all_moves(WHITE):
-        v = min(v, min_value(c[0], c[1]))
+    for b in range(0, len(game_eval.find_all_moves(WHITE))):
+        all_moves, corner_moves = game_eval.find_all_movesw(WHITE)
+        move = all_moves[b]
+        v = min(v, min_value(depth+1, move[0], move[1]))
     return v
-
-
