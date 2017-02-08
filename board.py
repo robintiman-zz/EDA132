@@ -241,18 +241,19 @@ def main():
     game = Board()
     player1s_turn = True
     while True:
+        level = input("Please enter the level of depth you want the bot to search: ")
+        try:
+            level = int(level)
+            break
+        except ValueError:
+            print("Enter a number please")
+            continue
+    while True:
         os.system('clear')
         print("Hello and welcome to Martin and Robin's game of Reversi!\n"
               "To play, enter the coordinates of your move separated by a space.\n"
               "Possible moves are denoted with " + chr(9633) + ".\n"
-              "To quit, enter \"quit\".\n\n")
-
-        level = input("Please enter the level of depth you want the bot to search: ")
-        try:
-            level = int(level)
-        except ValueError:
-            print("Enter a number please")
-            continue
+              "To quit, enter \"quit\".\n")
 
         minimax = Minimax(game, level)
 
