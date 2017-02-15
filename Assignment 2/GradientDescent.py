@@ -33,6 +33,8 @@ class GradientDescent:
         w1 = np.random.rand()
         converged = False
         index = 0
+        loss0_Old = 0
+        loss1_Old = 0
         while not converged:
             loss0 = self.grad_loss_w0(w0, w1, self.mode, index)
             loss1 = self.grad_loss_w1(w0, w1, self.mode, index)
@@ -45,15 +47,21 @@ class GradientDescent:
             else:
                 index += 1
                 if index == len(self.total_letters):
+
                     loss0 = self.grad_loss_w0(w0, w1, BATCH)
                     loss1 = self.grad_loss_w1(w0, w1, BATCH)
-                    converged = self.check_convergence(loss0, loss1)
+                    converged = self.check_convergence(loss0, loss1, loss0_Old, loss1_Old)
+                    loss0_Old = loss0
+                    loss1_Old = loss1
                     index = 0
 
         return w0, w1
 
-    def check_convergence(self, loss0, loss1):
-        return np.abs(loss0) < self.eps and np.abs(loss1) < self.eps
+    def check_convergence(self, loss0, loss1, loss0_old = None, loss1_old = None):
+        if self.mode == BATCH:
+            return np.abs(loss0) < self.eps and np.abs(loss1) < self.eps
+        else:
+            return np.abs((loss0 - loss0_old)) < self.eps**2 and np.abs((loss1 - loss1_old)) < self.eps**2
 
     def grad_loss_w0(self, w0, w1, mode, index = None):
         loss_sum = 0
@@ -80,7 +88,7 @@ class GradientDescent:
             return loss_sum
 
 def main():
-    gd = GradientDescent(BATCH, 0.1, 0.00001)
+    gd = GradientDescent(STOCH, 0.1, 0.00001)
     x = np.linspace(0, 0.05, 100)
     plt.plot(x, gd.func(x))
     plt.scatter(gd.total_a, gd.total_letters)
