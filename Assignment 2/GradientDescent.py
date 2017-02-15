@@ -20,15 +20,27 @@ class GradientDescent:
         self.w0, self.w1 = self.regression()
 
     def func(self, x):
+        """
+        Linear function
+        :param x: x value
+        :return: y value
+        """
         return self.w1*x + self.w0
 
     def scale_values(self):
+        """
+        :return: Scaled input array
+        """
         divider = 100000
         self.total_letters = self.total_letters / divider
         self.total_a = self.total_a / divider
         print(self.total_letters)
 
     def regression(self):
+        """
+        The regression loop using gradient descent
+        :return: The calculated weights
+        """
         w0 = np.random.rand()
         w1 = np.random.rand()
         converged = False
@@ -47,7 +59,6 @@ class GradientDescent:
             else:
                 index += 1
                 if index == len(self.total_letters):
-
                     loss0 = self.grad_loss_w0(w0, w1, BATCH)
                     loss1 = self.grad_loss_w1(w0, w1, BATCH)
                     converged = self.check_convergence(loss0, loss1, loss0_Old, loss1_Old)
@@ -61,9 +72,15 @@ class GradientDescent:
         if self.mode == BATCH:
             return np.abs(loss0) < self.eps and np.abs(loss1) < self.eps
         else:
-            return np.abs((loss0 - loss0_old)) < self.eps**2 and np.abs((loss1 - loss1_old)) < self.eps**2
+            return np.abs((loss0 - loss0_old))**2 < self.eps and np.abs((loss1 - loss1_old))**2 < self.eps
 
     def grad_loss_w0(self, w0, w1, mode, index = None):
+        """
+        The gradient loss function for weight w0
+        :param mode: Stochastic or batch
+        :param index: Only used in stochastic
+        :return: The gradient
+        """
         loss_sum = 0
         if mode == BATCH:
             nbr_samples = len(self.total_letters)
@@ -75,6 +92,12 @@ class GradientDescent:
             return loss_sum
 
     def grad_loss_w1(self, w0, w1, mode, index = None):
+        """
+        The gradient loss function for weight w1
+        :param mode: Stochastic or batch
+        :param index: Only used in stochastic
+        :return: The gradient
+        """
         loss_sum = 0
         if mode == BATCH:
             nbr_samples = len(self.total_letters)
