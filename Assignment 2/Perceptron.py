@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class Perceptron:
     # Stochastic learning is used
@@ -12,6 +13,12 @@ class Perceptron:
     def update_weights(self):
         pass
 
+
+    def logic_regression(self, w, k, y, x, learning_rate):
+        h = 1 / (1 + math.e ** (-w * k))
+        lossw = learning_rate*(y - h) * h(1 - h) * x
+        w = w + lossw
+        return w
 
 def main():
     Perceptron()

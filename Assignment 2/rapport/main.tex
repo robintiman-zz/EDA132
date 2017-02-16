@@ -1,0 +1,46 @@
+\documentclass[a4paper]{article}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[margin=1in]{geometry}
+\usepackage{eurosym} % Euro baby
+\usepackage{fancyvrb}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+
+\usepackage{verbatimbox} % for centering verbatim
+\usepackage[parfill]{parskip} % removes indent on new paragraphs
+\usepackage{float} % for figure placement
+\usepackage{listings} %  allows math symbols in verbatim
+\usepackage{subcaption} % for subfigures
+\usepackage{listings} % for listing code
+
+\begin{document}
+
+\title{Artificial Intelligence - Reversibot}
+\author{Martin Johansson dat13mjo and Robin Timan dat13rti}
+\maketitle
+
+\section{Find the file}
+
+The runnable file is found in the map /AI/project1. The source files exists in a zip file in the same map named project1.zip
+
+\section{Run the program}
+To run the program write "python3 board.py" in the terminal, the rules for playing the game is displayed in the terminal.
+
+\section{Technical}
+
+We implemented a minimax algorithm that uses alpha-beta pruning, this makes it more efficient that the minimax algorithm. The evaluation function builds on the mobility of the players instead of the number of tiles turned. This is because we believe that this will be a more powerful metric. As well to this all possible corner moves is also used in the evaluation method. This means that the evaluation function will be the "possible moves of the bot + 3* possible corner moves - possible moves of the player - 3 * possible corner moves of the player". The method seems to have some problems because it is kinda easy to beat, but sadly we didn't have time to look into this.
+
+\section{Interesting code}
+
+Minimax -> minimax.py found in dat13mjo/AI/project1/minimax.py and is the complete file
+
+Evaluation function -> board.py found in dat13mjo/AI/project1/board.py on line 224
+
+
+
+\end{document}
