@@ -20,27 +20,36 @@
 
 \begin{document}
 
-\title{Artificial Intelligence - Reversibot}
+\title{Artificial Intelligence - Linear regression}
 \author{Martin Johansson dat13mjo and Robin Timan dat13rti}
 \maketitle
 
 \section{Find the file}
 
-The runnable file is found in the map /AI/project1. The source files exists in a zip file in the same map named project1.zip
+The runnable file is found in the map dat13mjo/AI/project2. The source files exists in a zip file in the same map named project2.zip
 
 \section{Run the program}
-To run the program write "python3 board.py" in the terminal, the rules for playing the game is displayed in the terminal.
+To run the executable just type "python3 batch.py" for the batch implementation of the gradient descent function, "python3 stochastic.py" for the stochastic version. 
 
-\section{Technical}
+To run the Perceptron version write "python3 perceptron.py" and for the logistic regression version write "python3 logic.py"
 
-We implemented a minimax algorithm that uses alpha-beta pruning, this makes it more efficient that the minimax algorithm. The evaluation function builds on the mobility of the players instead of the number of tiles turned. This is because we believe that this will be a more powerful metric. As well to this all possible corner moves is also used in the evaluation method. This means that the evaluation function will be the "possible moves of the bot + 3* possible corner moves - possible moves of the player - 3 * possible corner moves of the player". The method seems to have some problems because it is kinda easy to beat, but sadly we didn't have time to look into this.
+\section{Assignment}
 
-\section{Interesting code}
+The assignment is to implement linear regression using gradient descent, known as the method of steepest decent. The us of gradient descent is to find a value that minimize the function, in this case the loss between the approximation of the function and the function values themselves. More or less one takes steps to get closer and closer to the minimum of the evaluated function. When the value does not change more than a predefined threshold for the change between two sets the evaluation stops and the approximation is given. 
 
-Minimax -> minimax.py found in dat13mjo/AI/project1/minimax.py and is the complete file
+The perceptron algorithm is used for the classification of values, it makes prediction based on a linear regression line and classifies the values in the set on their location corresponding to this vector. In our case we want it to classify a book as either French or English depending on the frequency of "a" in the text. The perceptron algorithm sets the value as either 1 or 0 
 
-Evaluation function -> board.py found in dat13mjo/AI/project1/board.py on line 224
+logistic regression is just a method to make the transaction between the 1 and 0 of the perceptron algorithm more smooth. The basic hard nature that it only provides 1 and 0 may cause problem for values close to the classification vector. So linear regression is used to soften this classification.
+
+\section{Implementation}
+
+The implementation of our code is more or less completely based on the approach found in the textbook on the sides 719-727 which is the sides presented in the problem text of the assignment. We choose to implement the stochastic version by comparing the difference between to adjacent values of the loss. To make the system a bit more robust to changing approach in the form of batch or stochastic we choose to implement the acceptable loss value as the square of the value for the batch function. 
 
 
+ for 
+
+\section{Result}
+
+The result of our linear regression shows that we obtain a good result for both batch and stochastic implementation of the regression function. The stochastic version is as expected faster that the batch version, and this is of course because we dont go through the entire set every time we evaluate the function. 
 
 \end{document}
