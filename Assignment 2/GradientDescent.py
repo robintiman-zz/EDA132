@@ -10,6 +10,7 @@ class GradientDescent:
         self.total_letters = total_letters
         self.total_a = total_a
         self.learning_rate = learning_rate
+
         self.scale_values()
         self.eps = eps
         self.mode = mode
