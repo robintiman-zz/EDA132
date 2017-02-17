@@ -1,53 +1,60 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 
 class Perceptron:
     # Stochastic learning is used
 
-    def __init__(self, alpha):
+    def __init__(self, alpha, tol):
         arrays = self.reader()
-        self.total_en = arrays[0]
-        self.total_a_en = arrays[1]
-        self.total_fr = arrays[2]
-        self.total_a_fr = arrays[3]
         self.alpha = alpha
         self.tol = tol
 
-    def update(self, weights, alpha, y_vector, x_vector):
-        t, i, misclassified = 0
-        length = x_vector.shape[0]
+        weights = np.random.rand(3)
+        weights = self.update(arrays, weights, alpha)
+        print(weights)
+
+    def update(self, arrays, weights, alpha):
+        t = 0
+        index = 0
+        misclassified = 0
+        length = arrays[0].shape[0] - 1
         while True:
-            # w i ← w i + α (y − h w (x)) × x i
-            y_hat = self.threshold(weights, x_vector)
-            y = y_vector[0]
-            x = x_vector[i]
-            classification = self.loss(y, y_hat)
-            self.weights[i] = weights[i] + alpha * classification * x
+            # Pick a random sample. 1 to 16 because the first value is the class
+            i = np.random.randint(1, 16)
+            # Also random class
+            y = np.random.randint(0, 2)
+            if y == 0:
+                x_vector = np.array([1, arrays[1][i], arrays[0][i]])
+            else:
+                x_vector = np.array([1, arrays[3][i], arrays[2][i]])
+            y_hat = self.logistic(weights, x_vector)
+            x = x_vector[index]
+            classification = (y - y_hat)*y_hat*(1-y_hat)
+            print(classification)
+            weights[index] = weights[index] + alpha * classification * x
 
             t += 1
             self.update_alpha(t)
 
-            if classification != 0:
+            index += 1 if index < 2 else 0
+
+            if y_hat -  > 0:
                 misclassified += 1
 
-            if i == length:
-                i = 0
+            if t % length == 0:
                 if misclassified < self.tol:
                     break
                 misclassified = 0
-            else:
-                i += 1
+        return weights
 
-    def scale_values(self):
+    def scale_values(self, arr1 ,arr2, arr3, arr4):
         """
         Scales the input so they are in the range [0, 1]
         """
         divider = 100000
-        self.total_en = self.total_en / divider
-        self.total_a_en = self.total_a_en / divider
-        self.total_fr = self.total_fr / divider
-        self.total_a_fr = self.total_a_fr / divider
+        return arr1/divider, arr2/divider, arr3/divider, arr4/divider
 
     def update_alpha(self, t):
         self.alpha = 1000 / (1000 + t)
@@ -89,7 +96,7 @@ class Perceptron:
                     french_words[i] = int(temp.split(":", 1)[-1])
                     temp_a = a[i].strip()
                     french_a[i] = int(temp_a.split(":", 1)[-1])
-        return english_words, english_a, french_words, french_a
+        return self.scale_values(english_words, english_a, french_words, french_a)
 
     def threshold(self, weights, x_vector):
         if np.dot(weights, x_vector) >= 0:
@@ -106,14 +113,11 @@ class Perceptron:
         """
         return y - y_hat
 
-    def logic_regression(self, w, k, y, x, alpha):
-        h = 1 / (1 + math.e ** (-w * k))
-        lossw = alpha * (y - h) * h(1 - h) * x
-        w = w + lossw
-        return w
+    def logistic(self, w, x):
+        return 1 / (1 + math.e ** -np.dot(w, x))
 
 def main():
-    Perceptron(0.5, 3)
+    Perceptron(0.5, 2)
 
 if __name__=="__main__":
     main()
