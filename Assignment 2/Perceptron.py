@@ -5,18 +5,14 @@ import math
 class Perceptron:
     # Stochastic learning is used
 
-    def __init__(self, alpha, tol):
-        # English = 0, French = 1
-        self.total_en = np.array([35680, 42514, 15162, 35298, 29800, 40255, 74532, 37464, 31030, 24843, 36172,
-                             39552, 72545, 75352, 18031])
-        self.total_a_en = np.array([2217, 2761, 990, 2274, 1865, 2606, 4805, 2396, 1993, 1627,
-                               2375, 2560, 4597, 4871, 1119])
-        # self.reader()
+    def __init__(self, alpha):
+        arrays = self.reader()
+        self.total_en = arrays[0]
+        self.total_a_en = arrays[1]
+        self.total_fr = arrays[2]
+        self.total_a_fr = arrays[3]
         self.alpha = alpha
-        self.y_values = [0, 1]
         self.tol = tol
-        # self.x_vector = np.array([1, x1, x2])
-        # self.weights = np.array([w0, w1, w2])
 
     def update(self, weights, alpha, y_vector, x_vector):
         t, i, misclassified = 0
@@ -50,16 +46,50 @@ class Perceptron:
         divider = 100000
         self.total_en = self.total_en / divider
         self.total_a_en = self.total_a_en / divider
+        self.total_fr = self.total_fr / divider
+        self.total_a_fr = self.total_a_fr / divider
 
     def update_alpha(self, t):
         self.alpha = 1000 / (1000 + t)
 
+
     def reader(self):
-        french = open('french.txt', 'r')
-        classes = []
-        for line in french:
-            tmp = line.split(" ")
-            classes[0] = int(tmp[0])
+        """
+        Reads the input files according to the LIBSVM format.
+        :return: Arrays with the parsed values
+        """
+        english_words = np.zeros(16, dtype=np.int)
+        english_a = np.zeros(16, dtype=np.int)
+        french_words = np.ones(16, dtype=np.int)
+        french_a = np.ones(16, dtype=np.int)
+        # Could take this in as an argument instead.
+        files = ["english.txt", "french.txt"]
+        for i in range(0, len(files)):
+            current_file = open(files[i])
+            first = current_file.readline()
+            if (first[0] == '#'):
+                words = current_file.readline()
+            else:
+                words = first
+            nbr_of_a = current_file.readline()
+            if words[0] == '0':
+                word = words.split(" ")
+                a = nbr_of_a.split(" ")
+                for i in range(1, len(word)):
+                    temp = word[i].strip()
+                    english_words[i] = int(temp.split(":", 1)[-1])
+                    temp_a = a[i].strip()
+                    english_a[i] = int(temp_a.split(":", 1)[-1])
+
+            else:
+                word = words.split(" ")
+                a = nbr_of_a.split(" ")
+                for i in range(1, len(word)):
+                    temp = word[i].strip()
+                    french_words[i] = int(temp.split(":", 1)[-1])
+                    temp_a = a[i].strip()
+                    french_a[i] = int(temp_a.split(":", 1)[-1])
+        return english_words, english_a, french_words, french_a
 
     def threshold(self, weights, x_vector):
         if np.dot(weights, x_vector) >= 0:
@@ -76,9 +106,9 @@ class Perceptron:
         """
         return y - y_hat
 
-    def logic_regression(self, w, k, y, x, learning_rate):
+    def logic_regression(self, w, k, y, x, alpha):
         h = 1 / (1 + math.e ** (-w * k))
-        lossw = learning_rate*(y - h) * h(1 - h) * x
+        lossw = alpha * (y - h) * h(1 - h) * x
         w = w + lossw
         return w
 
