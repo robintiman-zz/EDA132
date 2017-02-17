@@ -6,10 +6,11 @@ import matplotlib.pyplot as plt
 class Perceptron:
     # Stochastic learning is used
 
-    def __init__(self, alpha, tol):
+    def __init__(self, mode, alpha, tol):
         arrays = self.reader()
         self.alpha = alpha
         self.tol = tol
+        self.mode = mode
 
         weights = np.random.rand(3)
         weights = self.update(arrays, weights, alpha)
@@ -29,10 +30,15 @@ class Perceptron:
                 x_vector = np.array([1, arrays[1][i], arrays[0][i]])
             else:
                 x_vector = np.array([1, arrays[3][i], arrays[2][i]])
-            y_hat = self.logistic(weights, x_vector)
+
             x = x_vector[index]
-            classification = (y - y_hat)*y_hat*(1-y_hat)
-            print(classification)
+            if self.mode==2:
+                y_hat = self.logistic(weights, x_vector)
+                classification = (y - y_hat)*y_hat*(1-y_hat)
+            else:
+                y_hat = self.threshold(weights, x_vector)
+                classification = self.loss(y, y_hat)
+
             weights[index] = weights[index] + alpha * classification * x
 
             t += 1
@@ -40,8 +46,12 @@ class Perceptron:
 
             index += 1 if index < 2 else 0
 
-            if y_hat -  > 0:
-                misclassified += 1
+            if self.mode == 2:
+                if y_hat - y < 0.5:
+                    misclassified += 1
+            else:
+                if classification != 0:
+                    misclassified += 1
 
             if t % length == 0:
                 if misclassified < self.tol:
@@ -117,7 +127,8 @@ class Perceptron:
         return 1 / (1 + math.e ** -np.dot(w, x))
 
 def main():
-    Perceptron(0.5, 2)
+    mode = input("Chose perceptron (1) or logistic (2): ")
+    Perceptron(int(mode), 0.5, 2)
 
 if __name__=="__main__":
     main()
