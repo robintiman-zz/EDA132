@@ -35,12 +35,16 @@ class Perceptron:
 
 
     def reader(self):
-        english_words = []
-        english_a = []
-        french_words = []
-        french_a = []
-        input_files = input("Files to read, seperate different files with a whitespace: ")
-        files = input_files.split(" ")
+        """
+        Reads the input files according to the LIBSVM format.
+        :return: Arrays with the parsed values
+        """
+        english_words = np.zeros(16, dtype=np.int)
+        english_a = np.zeros(16, dtype=np.int)
+        french_words = np.ones(16, dtype=np.int)
+        french_a = np.ones(16, dtype=np.int)
+        # Could take this in as an argument instead.
+        files = ["english.txt", "french.txt"]
         for i in range(0, len(files)):
             current_file = open(files[i])
             first = current_file.readline()
@@ -54,42 +58,40 @@ class Perceptron:
                 a = nbr_of_a.split(" ")
                 for i in range(1, len(word)):
                     temp = word[i].strip()
-                    english_words.append(temp.split(":", 1)[-1])
+                    english_words[i] = int(temp.split(":", 1)[-1])
                     temp_a = a[i].strip()
-                    english_a.append(temp_a.split(":", 1)[-1])
+                    english_a[i] = int(temp_a.split(":", 1)[-1])
 
             else:
                 word = words.split(" ")
                 a = nbr_of_a.split(" ")
                 for i in range(1, len(word)):
                     temp = word[i].strip()
-                    french_words.append(temp.split(":", 1)[-1])
+                    french_words[i] = int(temp.split(":", 1)[-1])
                     temp_a = a[i].strip()
-                    french_a.append(temp_a.split(":", 1)[-1])
+                    french_a[i] = int(temp_a.split(":", 1)[-1])
         return english_words, english_a, french_words, french_a
 
-        def predict(self, weights, x_vector):
-            if weights * x_vector >= 0:
-                return 1
-            else:
-                return 0
+    def threshold(self, weights, x_vector):
+        if np.dot(weights, x_vector) >= 0:
+            return 1
+        else:
+            return 0
 
-        def loss(self, y, y_hat):
-            """
-            Loss function
-            :param y: The real class
-            :param y_hat: The predicted class
-            :return: 0 if correct prediction, 1 or -1 otherwise
-            """
-            return y - y_hat
+    def loss(self, y, y_hat):
+        """
+        Loss function
+        :param y: The real class
+        :param y_hat: The predicted class
+        :return: 0 if correct prediction, 1 or -1 otherwise
+        """
+        return y - y_hat
 
-
-
-        def logic_regression(self, w, k, y, x, alpha):
-            h = 1 / (1 + math.e ** (-w * k))
-            lossw = alpha * (y - h) * h(1 - h) * x
-            w = w + lossw
-            return w
+    def logic_regression(self, w, k, y, x, alpha):
+        h = 1 / (1 + math.e ** (-w * k))
+        lossw = alpha * (y - h) * h(1 - h) * x
+        w = w + lossw
+        return w
 
 def main():
     Perceptron(0.5)
