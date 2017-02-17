@@ -7,12 +7,11 @@ class Perceptron:
     # Stochastic learning is used
 
     def __init__(self, alpha):
-        # English = 0, French = 1
-        self.total_en = np.array([35680, 42514, 15162, 35298, 29800, 40255, 74532, 37464, 31030, 24843, 36172,
-                                  39552, 72545, 75352, 18031])
-        self.total_a_en = np.array([2217, 2761, 990, 2274, 1865, 2606, 4805, 2396, 1993, 1627,
-                                    2375, 2560, 4597, 4871, 1119])
-        # self.reader()
+        arrays = self.reader()
+        self.total_en = arrays[0]
+        self.total_a_en = arrays[1]
+        self.total_fr = arrays[2]
+        self.total_a_fr = arrays[3]
         self.alpha = alpha
         # self.x_vector = np.array([1, x1, x2])
         # self.weights = np.array([w0, w1, w2])
@@ -28,61 +27,46 @@ class Perceptron:
         divider = 100000
         self.total_en = self.total_en / divider
         self.total_a_en = self.total_a_en / divider
+        self.total_fr = self.total_fr / divider
+        self.total_a_fr = self.total_a_fr / divider
 
     def update_alpha(self, t):
         self.alpha = 1000 / (1000 + t)
 
-        """
-                reads a file and creates arrays with the information
-                It not pretty though, not at all
-                """
 
     def reader(self):
         english_words = []
         english_a = []
         french_words = []
         french_a = []
-        file = open('french.txt')
+        input_files = input("Files to read, seperate different files with a whitespace: ")
+        files = input_files.split(" ")
+        for i in range(0, len(files)):
+            current_file = open(files[i])
+            first = current_file.readline()
+            if (first[0] == '#'):
+                words = current_file.readline()
+            else:
+                words = first
+            nbr_of_a = current_file.readline()
+            if words[0] == '0':
+                word = words.split(" ")
+                a = nbr_of_a.split(" ")
+                for i in range(1, len(word)):
+                    temp = word[i].strip()
+                    english_words.append(temp.split(":", 1)[-1])
+                    temp_a = a[i].strip()
+                    english_a.append(temp_a.split(":", 1)[-1])
 
-        file.readline()
-        words = file.readline()
-        nbr_of_a = file.readline()
-        if words.next() == 0:
-            words.split(" ")
-
-            while True:
-                if words.split(" "):
-                    temp = words.split(" ")
-                    english_words.append(temp[2:])
-                else:
-                    break
-
-            while True:
-                if nbr_of_a.split(" "):
-                    temp = nbr_of_a.split(" ")
-                    english_a.append(temp[2:])
-                else:
-                    break
-            return english_words, english_a
-        else:
-            words.split(" ")
-            while True:
-                if words.split(" "):
-                    temp = words.split(" ")
-                    french_words.append(temp[2:])
-                else:
-                    break
-
-            while True:
-                if nbr_of_a.split(" "):
-                    temp = nbr_of_a.split(" ")
-                    french_a.append(temp[2:])
-                else:
-                    break
-            return french_words, french_a
-
-
-
+            else:
+                word = words.split(" ")
+                a = nbr_of_a.split(" ")
+                for i in range(1, len(word)):
+                    temp = word[i].strip()
+                    french_words.append(temp.split(":", 1)[-1])
+                    temp_a = a[i].strip()
+                    french_a.append(temp_a.split(":", 1)[-1])
+        return english_words, english_a, french_words, french_a
 
         def predict(self, weights, x_vector):
             if weights * x_vector >= 0:
@@ -101,14 +85,14 @@ class Perceptron:
 
 
 
-        def logic_regression(self, w, k, y, x, learning_rate):
+        def logic_regression(self, w, k, y, x, alpha):
             h = 1 / (1 + math.e ** (-w * k))
-            lossw = learning_rate*(y - h) * h(1 - h) * x
+            lossw = alpha * (y - h) * h(1 - h) * x
             w = w + lossw
             return w
 
-    def main():
-        Perceptron(0.5)
+def main():
+    Perceptron(0.5)
 
-    if __name__=="__main__":
-        main()
+if __name__=="__main__":
+    main()
