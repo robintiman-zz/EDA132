@@ -87,10 +87,7 @@ class Perceptron:
 
         # First number is a label telling which sort of data the specific line is,
         # automatically ignores the explanatory row.
-            print(english_words)
-            print(english_a)
-            print(french_words)
-            print(french_a)
+
             for j in range(0, len(lines)):
                 line = lines[j]
 
@@ -118,10 +115,7 @@ class Perceptron:
                         temp = word[i].strip()
                         french_a[i] = int(temp.split(":", 1)[-1])
 
-        print(english_words)
-        print(english_a)
-        print(french_words)
-        print(french_a)
+
         return self.scale_values(english_words, english_a, french_words, french_a)
 
     def threshold(self, weights, x_vector):
