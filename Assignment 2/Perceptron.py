@@ -80,32 +80,48 @@ class Perceptron:
         french_words = np.ones(16, dtype=np.int)
         french_a = np.ones(16, dtype=np.int)
         # Could take this in as an argument instead.
-        files = ["english.txt", "french.txt"]
+        files = ["data.txt"]
         for i in range(0, len(files)):
             current_file = open(files[i])
-            first = current_file.readline()
-            if (first[0] == '#'):
-                words = current_file.readline()
-            else:
-                words = first
-            nbr_of_a = current_file.readline()
-            if words[0] == '0':
-                word = words.split(" ")
-                a = nbr_of_a.split(" ")
-                for i in range(1, len(word)):
-                    temp = word[i].strip()
-                    english_words[i] = int(temp.split(":", 1)[-1])
-                    temp_a = a[i].strip()
-                    english_a[i] = int(temp_a.split(":", 1)[-1])
+            lines = current_file.readlines()
 
-            else:
-                word = words.split(" ")
-                a = nbr_of_a.split(" ")
-                for i in range(1, len(word)):
-                    temp = word[i].strip()
-                    french_words[i] = int(temp.split(":", 1)[-1])
-                    temp_a = a[i].strip()
-                    french_a[i] = int(temp_a.split(":", 1)[-1])
+        # First number is a label telling which sort of data the specific line is,
+        # automatically ignores the explanatory row.
+            print(english_words)
+            print(english_a)
+            print(french_words)
+            print(french_a)
+            for j in range(0, len(lines)):
+                line = lines[j]
+
+                if line[0] == '0':
+                    word = line.split(" ")
+                    for i in range(1, len(word)):
+                        temp = word[i].strip()
+                        english_words[i] = int(temp.split(":", 1)[-1])
+
+                if line[0] == '1':
+                    word = line.split(" ")
+                    for i in range(1, len(word)):
+                        temp = word[i].strip()
+                        english_a[i] = int(temp.split(":", 1)[-1])
+
+                if line[0] == '2':
+                    word = line.split(" ")
+                    for i in range(1, len(word)):
+                        temp = word[i].strip()
+                        french_words[i] = int(temp.split(":", 1)[-1])
+
+                if line[0] == '3':
+                    word = line.split(" ")
+                    for i in range(1, len(word)):
+                        temp = word[i].strip()
+                        french_a[i] = int(temp.split(":", 1)[-1])
+
+        print(english_words)
+        print(english_a)
+        print(french_words)
+        print(french_a)
         return self.scale_values(english_words, english_a, french_words, french_a)
 
     def threshold(self, weights, x_vector):
