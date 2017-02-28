@@ -75,12 +75,18 @@ class Perceptron:
         Reads the input files according to the LIBSVM format.
         :return: Arrays with the parsed values
         """
+        #Ugly soloution with index, but otherwise have to make changes to datastructure and did not have time for that
+
         english_words = np.zeros(16, dtype=np.int)
+        english_words_index = 0
         english_a = np.zeros(16, dtype=np.int)
+        english_a_index = 0
         french_words = np.ones(16, dtype=np.int)
+        french_words_index = 0
         french_a = np.ones(16, dtype=np.int)
+        french_a_index = 0
         # Could take this in as an argument instead.
-        files = ["data.txt"]
+        files = ["data2.txt"]
         for i in range(0, len(files)):
             current_file = open(files[i])
             lines = current_file.readlines()
@@ -95,27 +101,27 @@ class Perceptron:
                     word = line.split(" ")
                     for i in range(1, len(word)):
                         temp = word[i].strip()
-                        english_words[i] = int(temp.split(":", 1)[-1])
+                        if temp[0] == '1':
+                            english_words_index += 1
+                            english_words[english_words_index] = int(temp.split(":", 1)[-1])
+                        if temp[0] == '2':
+                            english_a_index += 1
+                            english_a[english_a_index] = int(temp.split(":", 1)[-1])
 
                 if line[0] == '1':
                     word = line.split(" ")
                     for i in range(1, len(word)):
                         temp = word[i].strip()
-                        english_a[i] = int(temp.split(":", 1)[-1])
-
-                if line[0] == '2':
-                    word = line.split(" ")
-                    for i in range(1, len(word)):
-                        temp = word[i].strip()
-                        french_words[i] = int(temp.split(":", 1)[-1])
-
-                if line[0] == '3':
-                    word = line.split(" ")
-                    for i in range(1, len(word)):
-                        temp = word[i].strip()
-                        french_a[i] = int(temp.split(":", 1)[-1])
-
-
+                        if temp[0] == '1':
+                            french_words_index += 1
+                            french_words[french_words_index] = int(temp.split(":", 1)[-1])
+                        if temp[0] == '2':
+                            french_a_index += 1
+                            french_a[french_a_index] = int(temp.split(":", 1)[-1])
+        print (english_a)
+        print (english_words)
+        print (french_a)
+        print (french_words)
         return self.scale_values(english_words, english_a, french_words, french_a)
 
     def threshold(self, weights, x_vector):
