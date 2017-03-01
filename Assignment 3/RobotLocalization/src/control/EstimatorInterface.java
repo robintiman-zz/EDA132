@@ -58,8 +58,8 @@ public interface EstimatorInterface {
 	public double getOrXY( int rX, int rY, int x, int y);
 
 	/*
-	 * returns the probability entry (Tij) of the transition matrix T to go from pose 
-	 * i = (x, y, h) to pose j = (nX, nY, nH)
+	 * returns the probability entry (Tij) of the transition matrix T to go from pos
+	 * i = (x, y, h) to pos j = (nX, nY, nH)
 	 */	
 	public double getTProb( int x, int y, int h, int nX, int nY, int nH);
 

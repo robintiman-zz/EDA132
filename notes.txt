@@ -31,6 +31,22 @@ Consists of a transitions probability matrix and an evidence matrix. The evidenc
 The probability that a robot in square i would recieve a sensor reading et is:
 P(Et=et|Xt=i) = Ot(ii) = (1-error)^(4-dit)*error^dit where dit is the discrepancy, ie the number of inaccurate evidence bits. 
 
+The basic inference tasks that needs to be solved are:
+
+Filtering. The task of computing the belief state. It is also called state estimation and in our case this means computing P(Xt|e(1:t)) which is the probability that we are in state Xt given all the observations made so far.
+
+Prediction. The task of computing the posterios distribution over the future state given all observations made so far. 
+
+Smoothing. The task of computing the posterior distribution of a past state given all observations made so far. That is, P(Xk|e(1:t)) for some k such that 0 <= k < t. Smoothing provides a better estimate of the state than was available when the state probability was first computed. This means that we can make better future predictions. 
+
+Most likely explanation. Given a sequence of observations, this is the task of computing the sequence of states that is most likely to have generated those observations. 
+
+Learning. The task of updating the estimates. The overall process is an instance of the expectation-maximization (EM) algorithm. 
+
+
+
+
+
 
 
 
