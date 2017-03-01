@@ -1,0 +1,39 @@
+Notes EDA132 - Applied Artificial Intelligence 
+
+Chap. 5
+
+Adversarial search problems comes from competitive enviroments where two agents are in conflict with each other. These problems are more commonly known as games. 
+
+Adv. search problems consists of:
+- S0: The initial state
+- Players: Defines which player has the move in a state
+- Actions: The set of legal moves in a state
+- Results: Defines the result of a move 
+- Terminal-test: Truw when the game is over and false otherwise
+- Utility: The value function for a game that ends in a terminal state. 
+
+The minmax algorithm is for two player min and max where min tries to minimize the game ending utility and max tries to maximize it. The minimax value is the utility for max of being in a certain state. 
+
+Alpha-beta pruning is used to compute the correct minmax values without looking at every node in the game tree. It cuts the time complexity exponent in half. 
+
+To do in game:
+Implement utility function.
+
+---------------------------------------------------------------------------
+
+Gradient descent is used to minimize the loss. We follow the slope down to the lowest point. 
+
+---------------------------------------------------------------------------
+
+Hidden Markov Models (HMMs)
+
+Consists of a transitions probability matrix and an evidence matrix. The evidence variable Et contains evidence used by the model to determine its state. For example a robot reading its surroundings, using the evidence given by its sensors the robot can deduce its postion using these evidences. 
+The probability that a robot in square i would recieve a sensor reading et is:
+P(Et=et|Xt=i) = Ot(ii) = (1-error)^(4-dit)*error^dit where dit is the discrepancy, ie the number of inaccurate evidence bits. 
+
+
+
+
+
+
+
