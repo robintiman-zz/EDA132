@@ -2,6 +2,7 @@ package model;
 
 import control.EstimatorInterface;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Estimator implements EstimatorInterface {
@@ -21,6 +22,8 @@ public class Estimator implements EstimatorInterface {
         this.cols = cols;
         this.head = head;
         truePos = new int[2];
+        truePos[0] = 1;
+        truePos[1] = 2;
         int S = rows * cols * head;
         T = new double[S][S];
         O = new double[S][S];
@@ -53,7 +56,7 @@ public class Estimator implements EstimatorInterface {
 
     public void update() {
 
-        // Update proparbility distribution, forward matrix
+        // Update propability distribution, forward matrix
         int [] e = getCurrentReading();
         double [][] T_trans = transposeMatrix(T);
         double [][] temp = new double[S][S];
@@ -100,16 +103,16 @@ public class Estimator implements EstimatorInterface {
     // -------- PRIVATE METHODS --------
 
     //  The sensor reports
-// - the true location L with probability 0.1
-// - any of the n_Ls ∈ {3, 5, 8} existing surrounding fields L_s with probability 0.05 each.
-// - any of the n_Ls2 ∈ {5, 6, 7, 9, 11, 16} existing “secondary” surrounding fields L_s2 with probability 0.025 each
-// - "nothing" with probability 1.0 - 0.1 - n_Ls*0.05 - n_Ls2*0.025
+    // - the true location L with probability 0.1
+    // - any of the n_Ls ∈ {3, 5, 8} existing surrounding fields L_s with probability 0.05 each.
+    // - any of the n_Ls2 ∈ {5, 6, 7, 9, 11, 16} existing “secondary” surrounding fields L_s2 with probability 0.025 each
+    // - "nothing" with probability 1.0 - 0.1 - n_Ls*0.05 - n_Ls2*0.025
     private int[] sensor() {
         int truepos = convertToLinearPos(truePos[0], truePos[1]);
         int[] walls = encounteringWalls(truepos, -1);
         int n_Ls, n_Ls2;
         int nbrOfSurroundingWalls = walls[1];
-        if (nbrOfSurroundingWalls == 0) {
+        if (nbrOfSurroundingWalls == 2) {
             // This is hard-coded for now and assumes a 4x4 grid.
             n_Ls = FIRSTCORNER;
             n_Ls2 = 5;
@@ -123,18 +126,17 @@ public class Estimator implements EstimatorInterface {
         double probForSurrField = 0.05 * n_Ls;
         double probFor2SurrField = 0.025 * n_Ls2;
         double probForTruePos = 0.1;
-        double probForNothing = 1.0 - probForSurrField - probFor2SurrField - probForTruePos;
         Random rand = new Random();
         double reading = rand.nextDouble();
+        reading = 0.3;
         if (reading <= probForTruePos) {
             return truePos;
         } else if (reading <= probForTruePos + probForSurrField) {
             // Return some pos in the directly surrounding field.
-            return null;
+            return pickFromSurroundingField(n_Ls, 1);
         } else if (reading <= probForTruePos + probForSurrField + probFor2SurrField) {
             // Return some pos in the second surrounding field.
-
-            return null;
+            return pickFromSurroundingField(n_Ls2, 2);
         } else {
             // Return nothing (null)
             return null;
@@ -142,47 +144,32 @@ public class Estimator implements EstimatorInterface {
 
     }
 
-//    private int[] pickFromSurroundingField(int level, int n) {
-//        int x = truePos[0];
-//        int y = truePos[1];
-//        Random rand = new Random();
-//        int step = 3;
-//        if (level == 1) {
-//            // First surrounding field
-//            if (n == FIRSTCORNER) {
-//                step = 2;
-//                if (x == 0) {
-//                    x += rand.nextInt(step);
-//                } else {
-//                    x -= rand.nextInt(step);
-//                }
-//                if (y == 0) {
-//                    y += rand.nextInt(step);
-//                } else {
-//                    y -= rand.nextInt(step);
-//                }
-//            } else if (n == FIRSTWALL) {
-//                step = 2;
-//                if (x == 0) {
-//                    x += rand.nextInt(step);
-//                } else if (x == cols) {
-//                    x -= rand.nextInt(step);
-//                } else {
-//                    x += rand.nextInt(step + 1) - 1;
-//                }
-//                if (y == 0) {
-//                    x += rand.nextInt(step);
-//                } else if (x == cols) {
-//                    x -= rand.nextInt(step);
-//                } else {
-//                    x += rand.nextInt(step + 1) - 1;
-//                }
-//            }
-//        } else {
-//            // Second surrounding field
-//
-//        }
-//    }
+    private int[] pickFromSurroundingField(int n, int level) {
+        int x, y, rangeFrom, rangeTo;
+        if (level == 1) {
+            rangeFrom = -1;
+            rangeTo = 2;
+        } else {
+            rangeFrom = -2;
+            rangeTo = 3;
+        }
+        ArrayList<int[]> toPickFrom = new ArrayList<>(n);
+        for (int j = rangeFrom; j < rangeTo; j++) {
+            x = truePos[0] + j;
+            if (x > rows || x < 0) continue; // Out of bounds
+            for (int i = -1; i < 2; i++) {
+                y = truePos[1] + i;
+                if (x == truePos[0] && y == truePos[1]) continue; // We don't want to add the true location.
+                if (y <= cols && y >= 0) {
+                    int[] point = {x, y};
+                    toPickFrom.add(point);
+                }
+
+            }
+        }
+        Random rand = new Random();
+        return toPickFrom.get(rand.nextInt(n));
+    }
 
     /**
      * Fills the O matrix
@@ -231,12 +218,11 @@ public class Estimator implements EstimatorInterface {
 
     private void fillTransitionMatrix() {
         // Each row represents a state and each column represents a state.
-        double prob = 0;
-        int pos = 0, nextPos = 0;
-        int dir = 0, nextDir = 0; // NORTH = 0, WEST = 1, SOUTH = 2, EAST = 3
+        double prob;
+        int pos, nextPos;
+        int dir, nextDir; // NORTH = 0, WEST = 1, SOUTH = 2, EAST = 3
         for (int i = 0; i < T[0].length; i++) {
             // Gets the current position and heading
-            System.out.print(T[0].length);
             pos = i / head;
             dir = i % head;
             for (int j = 0; j < T[0].length; j++) {
@@ -244,9 +230,6 @@ public class Estimator implements EstimatorInterface {
                 nextPos = j / head;
                 System.out.println(nextPos);
                 nextDir = j % head;
-                if (pos == 0 && nextPos == 1) {
-                    int c = 1+1;
-                }
                 // What is the probability that the next position and direction will be nextPos and nextDir?
                 if (nextStateIsPossible(pos, nextPos, nextDir)) {
                     if (dir == nextDir) {
@@ -261,7 +244,7 @@ public class Estimator implements EstimatorInterface {
                         }
                     }
                 } else {
-                    prob = 0;
+                    prob = 0.0;
                 }
                 T[i][j] = prob;
             }
@@ -352,7 +335,7 @@ public class Estimator implements EstimatorInterface {
             result[i] = temp;
             temp = 0;
         }
-    return result;
+        return result;
     }
 
     private int getMatrixIndex(int x, int y, int h) {
