@@ -2,15 +2,13 @@ package model;
 
 import control.EstimatorInterface;
 
-import java.net.NoRouteToHostException;
+import java.time.Clock;
 import java.util.Arrays;
+import java.util.Random;
 
-/**
- * Created by robintiman on 2017-03-01.
- */
 public class Estimator implements EstimatorInterface {
     private int rows, cols, head, state;
-    private Position[][] T;
+    private double[][] T;
     private static final int NORTH = 0;
     private static final int WEST = 1;
     private static final int SOUTH = 2;
@@ -20,8 +18,7 @@ public class Estimator implements EstimatorInterface {
         this.rows = rows;
         this.cols = cols;
         this.head = head;
-        double[][] T = new double[64][64];
-        T = createTransitionMatrix();
+        fillTransitionMatrix();
 
         for (int i = 0; i < T.length; i++) {
             for (int j = 0; j < T[i].length; j++) {
@@ -68,183 +65,75 @@ public class Estimator implements EstimatorInterface {
         return 0;
     }
 
+    // -------- PRIVATE METHODS --------
 
-    /**
-     * Returns the transition matrix for the given dimensions
-     * Assumes four directions
-     * @return The transition matrix of size S*S where S = rows*cols*4 (from number of directions
-     * */
-    private double[][] createTransitionMatrix() {
-        int size = rows * cols * 4;
-        int dir = 0;
-        double[][] T = new double[size][size];
-        for (int x = 0; x < size; x++) {
-            dir = x % 4;
-            for (int i = 0; i < 4; i++) {
-                for (int j = 0; j < 4; i++) {
-                    Position temp = new Position(i, j);
-                    double[] p = temp.getProb(dir);
-                    for (int k = 0; k < 4; k++) {
-                        T[x][i*16 + j * 4 + k] = p[k];
-                    }
-                }
-            }
-        }
-        return T;
-    }
-
-
-    private class Position {
-        private double[] probs;
-        private int x, y;
-
-        public Position(int x, int y) {
-            this.x = x;
-            this.y = y;
-            probs = new double[head];
-        }
-
-        /**
-         * Returns the probability of being in state (x, y, dir)
-         *
-         * @param dir - The direction
-         * @return The transitions probability
-         */
-        public double[] getProb(int dir) {
-            double[] probs = new double[4];
-            boolean northPos = false;
-            boolean westPos = false;
-            boolean southPos = false;
-            boolean eastPos = false;
-            Arrays.fill(probs, 0);
-            int n = 0;
-            switch (dir) {
-
-                case NORTH:
-
-                    if(x != 0) {
-                        northPos = true;
-                        probs[NORTH] = 0.7;
+    private void fillTransitionMatrix() {
+        int S = rows * cols * head;
+        T = new double[S][S];
+        // Each row represents a state and each column represents a state.
+        double prob = 0;
+        int pos = 0, nextPos = 0;
+        int dir = 0, nextDir = 0; // NORTH = 0, WEST = 1, SOUTH = 2, EAST = 3
+        for (int i = 0; i < S; i++) {
+            // Gets the current position and heading
+            pos = i / head;
+            dir = i % head;
+            for (int j = 0; j < S; j++) {
+                // Iterates through and adds transition probabilities for every other state.
+                nextPos = j / head;
+                nextDir = j % head;
+                // What is the probability that the next position and direction will be nextPos and nextDir?
+                if (nextPosIsPossible(pos, nextPos)) {
+                    if (dir == nextDir) {
+                        prob = 0.7;
                     } else {
-                        probs[NORTH] = 0;
-                    }
-
-                    if(y != cols)   {
-                        westPos = true;
-                        n++;
-                    }
-
-                    if(x != rows)   {
-                        southPos = true;
-                        n++;
-                    }
-
-                    if(y != 0)  {
-                        eastPos = true;
-                        n++;
-                    }
-
-                    if(westPos) probs[WEST] = probs[NORTH]/n;
-                    if(southPos) probs[SOUTH] = probs[NORTH]/n;
-                    if(eastPos) probs[EAST] = probs[NORTH]/n;
-
-
-                case WEST:
-
-                    if(x != 0) {
-                        northPos = true;
-                        n++;
-                    }
-
-                    if(y != cols)   {
-                        westPos = true;
-                        probs[WEST] = 0.7;
-                    } else {
-                        probs[WEST] = 0;
-                    }
-
-                    if(x != rows)   {
-                        southPos = true;
-                        n++;
-                    }
-
-                    if(y != 0)  {
-                        eastPos = true;
-                        n++;
-                    }
-
-                    if(northPos) probs[NORTH] = probs[WEST]/n;
-                    if(southPos) probs[SOUTH] = probs[WEST]/n;
-                    if(eastPos) probs[EAST] = probs[WEST]/n;
-
-                    case SOUTH:
-
-                        if(x != 0) {
-                            northPos = true;
-                            n++;
-                        }
-
-                        if(y != cols)   {
-                            westPos = true;
-                            n++;
-                        }
-
-                        if(x != rows)   {
-                            southPos = true;
-                            probs[SOUTH] = 0.7;
+                        int[] walls = encounteringWalls(pos, dir);
+                        boolean wallEncountered = walls[0] == 1;
+                        if (wallEncountered) {
+                            prob = 1 / (head - walls[1]);
                         } else {
-                            probs[SOUTH] = 0;
+                            prob = 0.3 / (head - walls[1]);
                         }
-                        if(y != 0)  {
-                            eastPos = true;
-                            n++;
-                        }
-
-                        if(westPos) probs[WEST] = probs[SOUTH]/n;
-                        if(northPos) probs[NORTH] = probs[SOUTH]/n;
-                    if(eastPos) probs[EAST] = probs[SOUTH]/n;
-
-                    case EAST:
-
-                    if(x != 0) {
-                        northPos = true;
-                        n++;
                     }
-
-                        if(y != cols)   {
-                            westPos = true;
-                            n++;
-                        }
-
-                        if(x != rows)   {
-                            southPos = true;
-                            n++;
-                        }
-
-                        if(y != 0)  {
-                            eastPos = true;
-                            probs[EAST] = 0.7;
-                    } else { probs[EAST] = 0; }
-
-
-                    if(westPos) probs[WEST] = probs[EAST]/n;
-                    if(southPos) probs[SOUTH] = probs[EAST]/n;
-                    if(northPos) probs[NORTH] = probs[EAST]/n;
-
+                } else {
+                    prob = 0;
+                }
+                T[i][j] = prob;
             }
-
-        return probs;
-        }
-
-        /**
-         * Updates the transition probabilities for this position
-         */
-        public void updateProbs() {
-            // Do something
-        }
-
-
         }
     }
 
+    private boolean nextPosIsPossible(int p, int np) {
+        int diff = Math.abs(p - np);
+        if (p / cols != np / cols) {
+            // p and np are on different rows.
+            return diff == 4;
+        }
+        // They're on the same row.
+        return diff == 1;
+    }
 
+
+    private int[] encounteringWalls(int p, int h) {
+        int wallEncountered = 0; // 0 if false, 1 otherwise
+        int walls = 0;
+        if (p - cols < 0) {
+            walls++; // NORTH
+            if (h == NORTH) wallEncountered = 1;
+        }
+        if (p / cols != (p - 1) / cols) {
+            walls++; // WEST
+            if (h == WEST) wallEncountered = 1;
+        }
+        if (p + cols > cols * rows) {
+            walls++; // SOUTH
+            if (h == SOUTH) wallEncountered = 1;
+        }
+        if (p / cols != (p + 1) / cols) {
+            walls++; // EAST
+            if (h == EAST) wallEncountered = 1;
+        }
+        int [] ret = {wallEncountered, walls};
+        return ret;
+    }
+}
