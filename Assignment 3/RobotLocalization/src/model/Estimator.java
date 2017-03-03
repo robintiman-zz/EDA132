@@ -3,8 +3,9 @@ package model;
 import control.EstimatorInterface;
 
 public class Estimator implements EstimatorInterface {
-    private int rows, cols, head;
-    private double[][] T, O;
+    private int rows, cols, head, S;
+    private double[][] T, O, forward;
+
     private static final int NORTH = 0;
     private static final int WEST = 1;
     private static final int SOUTH = 2;
@@ -19,7 +20,7 @@ public class Estimator implements EstimatorInterface {
         O = new double[S][S];
         fillTransitionMatrix();
         fillObservationMatrix();
-
+        forward = new double[S][S];
         for (int i = 0; i < T.length; i++) {
             for (int j = 0; j < T[i].length; j++) {
                 System.out.print(T[i][j] + " ");
@@ -43,6 +44,15 @@ public class Estimator implements EstimatorInterface {
 
     public void update() {
 
+        // Update proparbility distribution, forward matrix
+        int [] e = getCurrentReading();
+        double [][] T_trans = transposeMatrix(T);
+        double [][] temp = new double[S][S];
+        double [][] next_forward = new double[S][S];
+        temp = multiplyMatrix(O, T_trans);
+        forward = multiplyMatrix(temp, forward);
+
+
     }
 
     public int[] getCurrentTruePosition() {
@@ -54,15 +64,28 @@ public class Estimator implements EstimatorInterface {
     }
 
     public double getCurrentProb(int x, int y) {
-        return 0;
+        //TODO WHEN UPDATE DONE
+        double temp = 0;
+        int firstPosIndex = getMatrixIndex(x, y, 0);
+        for (int i = 0; i < 4; i++) {
+            temp += O[firstPosIndex+i][firstPosIndex+i];
+        }
+        return temp;
     }
 
+
     public double getOrXY(int rX, int rY, int x, int y) {
-        return 0;
+        double temp = 0;
+        int startPosIndex = getMatrixIndex(x, y, 0);
+        int nextPosIndex = getMatrixIndex(rX, rY, 0);
+        for (int i = 0; i < 4; i++) {
+            temp += O[startPosIndex+i][nextPosIndex+i];
+        }
+        return temp;
     }
 
     public double getTProb(int x, int y, int h, int nX, int nY, int nH) {
-        return 0;
+        return T[getMatrixIndex(x, y, h)][getMatrixIndex(nX, nY ,nH)];
     }
 
     // -------- PRIVATE METHODS --------
@@ -85,6 +108,7 @@ public class Estimator implements EstimatorInterface {
             for (int j = 0; j < T[0].length; j++) {
                 // Iterates through and adds transition probabilities for every other state.
                 nextPos = j / head;
+                System.out.println(nextPos);
                 nextDir = j % head;
                 // What is the probability that the next position and direction will be nextPos and nextDir?
                 if (nextPosIsPossible(pos, nextPos)) {
@@ -139,5 +163,75 @@ public class Estimator implements EstimatorInterface {
         }
         int [] ret = {wallEncountered, walls};
         return ret;
+    }
+
+    private double[][] transposeMatrix(double [][] m) {
+        double[][] temp = new double[m[0].length][m.length];
+        for (int i = 0; i < m.length; i++)
+            for (int j = 0; j < m[0].length; j++)
+                temp[j][i] = m[i][j];
+        return temp;
+    }
+
+    private double[][] multiplyMatrix(double[][] a, double[][] b){
+        int size = a.length;
+        double[][] c = new double[size][size];
+        int i,j,k;
+        for (i = 0; i < size; i++) {
+            for (j = 0; j < 2; j++) {
+                c[i][j] = 0.00000;
+            }
+        }
+        for(i=0; i < size; i++){
+            for(j = 0; j < size; j++){
+                for (k = 0; k < size; k++){
+                    c[i][j]+= (a[i][k] * b[k][j]);
+                }
+
+            }
+        }
+        return c;
+    }
+
+    private double [] multiplyMatrixWithVector (double[][] a, double[] b)   {
+        int i, j;
+        double temp = 0;
+        double[] result = new double[S];
+
+        for (i = 0; i < a.length; i++)  {
+            for (j = 0; j < a.length; j++)   {
+                temp += a[i][j] * b[j];
+            }
+            result[i] = temp;
+            temp = 0;
+        }
+    return result;
+    }
+
+    private int getMatrixIndex(int x, int y, int h) {
+        return rows * cols * x + cols * y + h;
+    }
+
+    private double[][] normalize(double [][] a) {
+        int i, j;
+        double alpha = 0;
+        for(i = 0; i < a.length; i++) {
+            for(j = 0; j < a[0].length; j++) {
+                alpha =+ a[i][j];
+            }
+        }
+    }
+
+    private double[][] matrixMulConst(double[][] a, double b)   {
+        int i, j;
+        double[][] result = new double[a.length][a[0].length];
+        for(i = 0; i < a.length; i++)   {
+            for(j =0; j < a[0].length; j++) {
+                result[i][j] = a[i][j] * b;
+
+
+            }
+        }
+        return result;
     }
 }
