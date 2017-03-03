@@ -4,16 +4,19 @@ import control.EstimatorInterface;
 
 public class Estimator implements EstimatorInterface {
     private int rows, cols, head;
+    private int[] truePos;
     private double[][] T, O;
     private static final int NORTH = 0;
     private static final int WEST = 1;
     private static final int SOUTH = 2;
     private static final int EAST = 3;
+    private static final double NOTHING = -1;
 
     public Estimator(int rows, int cols, int head) {
         this.rows = rows;
         this.cols = cols;
         this.head = head;
+        truePos = new int[2];
         int S = rows * cols * head;
         T = new double[S][S];
         O = new double[S][S];
@@ -46,7 +49,7 @@ public class Estimator implements EstimatorInterface {
     }
 
     public int[] getCurrentTruePosition() {
-        return new int[0];
+        return truePos;
     }
 
     public int[] getCurrentReading() {
@@ -68,9 +71,38 @@ public class Estimator implements EstimatorInterface {
     // -------- PRIVATE METHODS --------
 
     private void fillObservationMatrix() {
-        for (int i = 0; i < O[0].length; i++) {
-            // TODO implement this shit.
+        int pos, realPos;
+        double prob;
+        for (int i = 0; i < O[0].length; i += head) {
+            pos = i / head;
+            realPos = convertToLinearPos(truePos[0], truePos[1]);
+            if (pos == realPos) {
+                prob = 0.1;
+            } else if ()
+
+
+            O[i][i] = prob;
         }
+    }
+
+    private int getNbrOfSurroundingFields(int pos) {
+        // We only want the number of walls so heading doesn't matter here.
+        int[] walls = encounteringWalls(pos, -1);
+
+    }
+
+    private boolean inDirectlySurroundingFields(int pos, int realPos) {
+        int diff = Math.abs(pos - realPos);
+        
+    }
+
+    /**
+     * Converts given coordinates into a linear position of the room matrix.
+     * @param x, y coordinates
+     * @return The corresponding linear position.
+     */
+    private int convertToLinearPos(int x, int y) {
+        return x * cols + y;
     }
 
     private void fillTransitionMatrix() {
