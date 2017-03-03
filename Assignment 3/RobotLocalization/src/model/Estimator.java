@@ -2,13 +2,9 @@ package model;
 
 import control.EstimatorInterface;
 
-import java.time.Clock;
-import java.util.Arrays;
-import java.util.Random;
-
 public class Estimator implements EstimatorInterface {
-    private int rows, cols, head, state;
-    private double[][] T;
+    private int rows, cols, head;
+    private double[][] T, O;
     private static final int NORTH = 0;
     private static final int WEST = 1;
     private static final int SOUTH = 2;
@@ -18,7 +14,11 @@ public class Estimator implements EstimatorInterface {
         this.rows = rows;
         this.cols = cols;
         this.head = head;
+        int S = rows * cols * head;
+        T = new double[S][S];
+        O = new double[S][S];
         fillTransitionMatrix();
+        fillObservationMatrix();
 
         for (int i = 0; i < T.length; i++) {
             for (int j = 0; j < T[i].length; j++) {
@@ -67,18 +67,22 @@ public class Estimator implements EstimatorInterface {
 
     // -------- PRIVATE METHODS --------
 
+    private void fillObservationMatrix() {
+        for (int i = 0; i < O[0].length; i++) {
+            // TODO implement this shit.
+        }
+    }
+
     private void fillTransitionMatrix() {
-        int S = rows * cols * head;
-        T = new double[S][S];
         // Each row represents a state and each column represents a state.
         double prob = 0;
         int pos = 0, nextPos = 0;
         int dir = 0, nextDir = 0; // NORTH = 0, WEST = 1, SOUTH = 2, EAST = 3
-        for (int i = 0; i < S; i++) {
+        for (int i = 0; i < T[0].length; i++) {
             // Gets the current position and heading
             pos = i / head;
             dir = i % head;
-            for (int j = 0; j < S; j++) {
+            for (int j = 0; j < T[0].length; j++) {
                 // Iterates through and adds transition probabilities for every other state.
                 nextPos = j / head;
                 nextDir = j % head;
@@ -92,7 +96,7 @@ public class Estimator implements EstimatorInterface {
                         if (wallEncountered) {
                             prob = 1 / (head - walls[1]);
                         } else {
-                            prob = 0.3 / (head - walls[1]);
+                            prob = 0.3 / (head - walls[1] - 1);
                         }
                     }
                 } else {
@@ -107,7 +111,7 @@ public class Estimator implements EstimatorInterface {
         int diff = Math.abs(p - np);
         if (p / cols != np / cols) {
             // p and np are on different rows.
-            return diff == 4;
+            return diff == cols;
         }
         // They're on the same row.
         return diff == 1;
