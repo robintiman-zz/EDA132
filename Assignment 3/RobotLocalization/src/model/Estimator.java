@@ -159,6 +159,9 @@ public class Estimator implements EstimatorInterface {
             if (x > rows || x < 0) continue; // Out of bounds
             for (int i = -1; i < 2; i++) {
                 y = truePos[1] + i;
+                if (level == 2) {
+                    if (Math.abs(x - truePos[0]) < 2 && Math.abs(y - truePos[1]) < 2) continue;
+                }
                 if (x == truePos[0] && y == truePos[1]) continue; // We don't want to add the true location.
                 if (y <= cols && y >= 0) {
                     int[] point = {x, y};
