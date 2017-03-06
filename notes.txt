@@ -33,7 +33,8 @@ P(Et=et|Xt=i) = Ot(ii) = (1-error)^(4-dit)*error^dit where dit is the discrepanc
 
 The basic inference tasks that needs to be solved are:
 
-Filtering. The task of computing the belief state. It is also called state estimation and in our case this means computing P(Xt|e(1:t)) which is the probability that we are in state Xt given all the observations made so far.
+Filtering
+The task of computing the belief state. It is also called state estimation and in our case this means computing P(Xt|e(1:t)) which is the probability that we are in state Xt given all the observations made so far. A good filtering algorithm maintains a current state estimate and updates it rather than going back over the entire history of observations for each update. A function that estimate the current state should be used. 
 
 Prediction. The task of computing the posterios distribution over the future state given all observations made so far. 
 
@@ -42,6 +43,8 @@ Smoothing. The task of computing the posterior distribution of a past state give
 Most likely explanation. Given a sequence of observations, this is the task of computing the sequence of states that is most likely to have generated those observations. 
 
 Learning. The task of updating the estimates. The overall process is an instance of the expectation-maximization (EM) algorithm. 
+
+
 
 
 

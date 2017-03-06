@@ -31,19 +31,12 @@ class Minimax:
         alpha is the best score for max along the path to state.
         beta is the best score for min along the path to state.
         """
-        # Node = ((x, y), line, score, dir, offset))
-        if depth == 0 or node[1] == 0: # terminal state
-            return self.game.evaluate(board)
+        self.game.color_move(board, WHITE, node)
+        legal_moves = self.game.find_all_moves(board, WHITE)
 
-        line = node[1]
-        dir = node[3]
-        offset = node[4]
-        if dir == HORIZONTAL:
-            pos_in_line = node[0][0]
-        else:
-            pos_in_line = node[0][1]
-        self.game.color_tile(board, line, dir, WHITE, pos_in_line, offset)
-        legal_moves, corner_moves = self.game.find_all_moves(board, WHITE)
+        if depth == 0 or len(legal_moves) == 0: # terminal state
+            return node[2]
+
         if player_is_max:
             value = -float('inf')
             for move in legal_moves:
@@ -55,7 +48,7 @@ class Minimax:
         else:
             value = float('inf')
             for move in legal_moves:
-                value = max(value, self.alpha_beta(board, move, depth - 1, alpha, beta, True))
+                value = min(value, self.alpha_beta(board, move, depth - 1, alpha, beta, True))
                 beta = min(beta, value)
                 if beta <= alpha:
                     break
@@ -66,7 +59,7 @@ class Minimax:
     """
     def decision(self):
         board = np.copy(self.game.get_board())
-        all_moves, corner_move = self.game.find_all_moves(board, WHITE)
+        all_moves = self.game.find_all_moves(board, WHITE)
         max_move = 0
         max_val = 0
         if len(all_moves) == 0:
@@ -77,5 +70,4 @@ class Minimax:
             if max(score, max_val) == score:
                 max_val = score
                 max_move = node
-        print(max_move)
         return max_move
