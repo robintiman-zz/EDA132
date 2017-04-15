@@ -2,6 +2,7 @@ package model;
 
 import control.EstimatorInterface;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -31,14 +32,14 @@ public class Estimator implements EstimatorInterface {
 
         forward = new double[S][S];
         int[] reading = sensor();
-//        fillObservationMatrix();
+        fillObservationMatrix();
 
-        for (int i = 0; i < T.length; i++) {
-            for (int j = 0; j < T[i].length; j++) {
-                System.out.print(T[i][j] + " ");
-            }
-            System.out.println();
-        }
+//        for (int i = 0; i < T.length; i++) {
+//            for (int j = 0; j < T[i].length; j++) {
+//                System.out.print(T[i][j] + " ");
+//            }
+//            System.out.println();
+//        }
 //        state = new State();
     }
 
@@ -102,100 +103,63 @@ public class Estimator implements EstimatorInterface {
 
     // -------- PRIVATE METHODS --------
 
-    //  The sensor reports
-    // - the true location L with probability 0.1
-    // - any of the n_Ls ∈ {3, 5, 8} existing surrounding fields L_s with probability 0.05 each.
-    // - any of the n_Ls2 ∈ {5, 6, 7, 9, 11, 16} existing “secondary” surrounding fields L_s2 with probability 0.025 each
-    // - "nothing" with probability 1.0 - 0.1 - n_Ls*0.05 - n_Ls2*0.025
+    /**
+     * The sensor reports
+     * the true location L with probability 0.1
+     * any of the n_Ls ∈ {3, 5, 8} existing surrounding fields L_s with probability 0.05 each.
+     * any of the n_Ls2 ∈ {5, 6, 7, 9, 11, 16} existing “secondary” surrounding fields L_s2 with probability 0.025 each
+     * "nothing" with probability 1.0 - 0.1 - n_Ls*0.05 - n_Ls2*0.025
+     */
     private int[] sensor() {
-        int truepos = convertToLinearPos(truePos[0], truePos[1]);
-        int[] walls = encounteringWalls(truepos, -1);
-        int n_Ls, n_Ls2;
-        int nbrOfSurroundingWalls = walls[1];
-        if (nbrOfSurroundingWalls == 2) {
-            // This is hard-coded for now and assumes a 4x4 grid.
-            n_Ls = FIRSTCORNER;
-            n_Ls2 = 5;
-        } else if (nbrOfSurroundingWalls == 1) {
-            n_Ls = FIRSTWALL;
-            n_Ls2 = 6;
-        } else {
-            n_Ls = FIRSTNOWALL;
-            n_Ls2 = 7;
-        }
-        double probForSurrField = 0.05 * n_Ls;
-        double probFor2SurrField = 0.025 * n_Ls2;
-        double probForTruePos = 0.1;
-        Random rand = new Random();
-        double reading = rand.nextDouble();
-        reading = 0.3;
-        if (reading <= probForTruePos) {
-            return truePos;
-        } else if (reading <= probForTruePos + probForSurrField) {
-            // Return some pos in the directly surrounding field.
-            return pickFromSurroundingField(n_Ls, 1);
-        } else if (reading <= probForTruePos + probForSurrField + probFor2SurrField) {
-            // Return some pos in the second surrounding field.
-            return pickFromSurroundingField(n_Ls2, 2);
-        } else {
-            // Return nothing (null)
-            return null;
-        }
-
-    }
-
-    private int[] pickFromSurroundingField(int n, int level) {
-        int x, y, rangeFrom, rangeTo;
-        if (level == 1) {
-            rangeFrom = -1;
-            rangeTo = 2;
-        } else {
-            rangeFrom = -2;
-            rangeTo = 3;
-        }
-        ArrayList<int[]> toPickFrom = new ArrayList<>(n);
-        for (int j = rangeFrom; j < rangeTo; j++) {
-            x = truePos[0] + j;
-            if (x > rows || x < 0) continue; // Out of bounds
-            for (int i = -1; i < 2; i++) {
-                y = truePos[1] + i;
-                if (level == 2) {
-                    if (Math.abs(x - truePos[0]) < 2 && Math.abs(y - truePos[1]) < 2) continue;
+        int x = truePos[0];
+        int y = truePos[1];
+        int S = rows*cols*head;
+        O = new double[S][S];
+        int[] xRange = {Math.max(x - 2, 0), Math.min(x + 2, rows)};
+        int[] yRange = {Math.max(y - 2, 0), Math.min(y + 2, cols)};
+        int[] point = new int[2];
+        double dist, prob;
+        ArrayList<int[]> firstField = new ArrayList<int[]>();
+        ArrayList<int[]> secondField = new ArrayList<int[]>();
+        // Fills the sensor (O) matrix
+        for (int i = xRange[0]; i < xRange[1]; i++) {
+            for (int j = yRange[0]; j < yRange[1]; j++) {
+                point[0] = i;
+                point[1] = j;
+                dist = Math.sqrt(Math.pow(Math.abs(x - i), 2) + Math.pow(Math.abs(y - j), 2));
+                if (dist < 0.001) { // Just to make sure that there isn't any rounding off errors
+                    prob = 0.1;
+                } else if (dist < 2) {
+                    prob = 0.05;
+                    firstField.add(point);
+                } else {
+                    prob = 0.025;
+                    secondField.add(point);
                 }
-                if (x == truePos[0] && y == truePos[1]) continue; // We don't want to add the true location.
-                if (y <= cols && y >= 0) {
-                    int[] point = {x, y};
-                    toPickFrom.add(point);
+                int state = convertToLinearPos(i, j) * head;
+                for (int s = state; s < state + head; s++) {
+                    O[s][s] = prob;
                 }
-
             }
         }
+        // Returns a position according to the given probabilities
         Random rand = new Random();
-        return toPickFrom.get(rand.nextInt(n));
-    }
-
-    /**
-     * Fills the O matrix
-     * @param reading True if the sensor found something, False otherwise.
-     */
-    private void fillObservationMatrix(boolean reading) {
-        int pos, realPos;
-        double prob;
-        for (int i = 0; i < O[0].length; i += head) {
-            pos = i / head;
-            realPos = convertToLinearPos(truePos[0], truePos[1]);
-//            if (reading) {
-//                if (pos == realPos) {
-//                    prob = 0.1;
-//                } else if () {
-//
-//                }
-//
-//            } else {
-//
-//            }
-//            O[i][i] = prob;
+        double p = rand.nextDouble();
+        int[] sensPos = new int[2];
+        double probFirstField = 0.05 * firstField.size();
+        double probSecondField = 0.025 * secondField.size();
+        double probForTruePos = 0.1;
+        if (p <= probForTruePos) {
+            sensPos[0] = x;
+            sensPos[1] = y;
+        } else if (p <= probForTruePos + probFirstField) {
+            sensPos = firstField.get(rand.nextInt(firstField.size()));
+        } else if (p <= probForTruePos + probFirstField + probSecondField) {
+            sensPos = secondField.get(rand.nextInt(secondField.size()));
+        } else {
+            sensPos = null;
         }
+        return sensPos;
     }
 
     private int getNbrOfSurroundingFields(int pos) {
@@ -298,75 +262,4 @@ public class Estimator implements EstimatorInterface {
         return ret;
     }
 
-    private double[][] transposeMatrix(double [][] m) {
-        double[][] temp = new double[m[0].length][m.length];
-        for (int i = 0; i < m.length; i++)
-            for (int j = 0; j < m[0].length; j++)
-                temp[j][i] = m[i][j];
-        return temp;
-    }
-
-    private double[][] multiplyMatrix(double[][] a, double[][] b){
-        int size = a.length;
-        double[][] c = new double[size][size];
-        int i,j,k;
-        for (i = 0; i < size; i++) {
-            for (j = 0; j < 2; j++) {
-                c[i][j] = 0.00000;
-            }
-        }
-        for(i=0; i < size; i++){
-            for(j = 0; j < size; j++){
-                for (k = 0; k < size; k++){
-                    c[i][j]+= (a[i][k] * b[k][j]);
-                }
-
-            }
-        }
-        return c;
-    }
-
-    private double [] multiplyMatrixWithVector (double[][] a, double[] b)   {
-        int i, j;
-        double temp = 0;
-        double[] result = new double[S];
-
-        for (i = 0; i < a.length; i++)  {
-            for (j = 0; j < a.length; j++)   {
-                temp += a[i][j] * b[j];
-            }
-            result[i] = temp;
-            temp = 0;
-        }
-        return result;
-    }
-
-    private int getMatrixIndex(int x, int y, int h) {
-        return rows * cols * x + cols * y + h;
-    }
-
-    private double[][] normalize(double [][] a) {
-        int i, j;
-        double alpha = 0;
-        for(i = 0; i < a.length; i++) {
-            for(j = 0; j < a[0].length; j++) {
-                alpha =+ a[i][j];
-            }
-        }
-
-        return matrixMulConst(a, alpha);
-    }
-
-    private double[][] matrixMulConst(double[][] a, double b)   {
-        int i, j;
-        double[][] result = new double[a.length][a[0].length];
-        for(i = 0; i < a.length; i++)   {
-            for(j =0; j < a[0].length; j++) {
-                result[i][j] = a[i][j] * b;
-
-
-            }
-        }
-        return result;
-    }
 }
