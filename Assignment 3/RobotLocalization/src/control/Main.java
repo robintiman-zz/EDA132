@@ -17,7 +17,7 @@ public class Main {
 		 * graphics class.
 		 */
 //		EstimatorInterface l = new DummyLocalizer( 4, 4, 4);
-		EstimatorInterface l = new Estimator(4, 4 ,4 );
+		EstimatorInterface l = new Estimator(6, 6 ,4 );
 
 		RobotLocalizationViewer viewer = new RobotLocalizationViewer( l);
 
